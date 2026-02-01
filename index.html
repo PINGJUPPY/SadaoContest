@@ -3,217 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบให้คะแนนการประกวด (Sadao 2569)</title>
+    <title>ระบบคิว & ให้คะแนน (Sadao 2569)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding-bottom: 60px; }
-        .header-bg { background: linear-gradient(135deg, #00695c, #4db6ac); color: white; padding: 20px 0; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .card-contestant { border: none; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; background: white; border-left: 6px solid #ccc; }
-        .card-contestant.active-status { border-left-color: #28a745; background-color: #e8f5e9; transform: scale(1.02); box-shadow: 0 5px 15px rgba(40,167,69,0.2); }
-        .category-badge { font-size: 0.8rem; background: #e0f7fa; color: #006064; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-        .btn-refresh { position: fixed; bottom: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding-bottom: 80px; }
+        .header-bg { background: linear-gradient(135deg, #1565c0, #42a5f5); color: white; padding: 15px 0; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
+        
+        .card-contestant { border: none; border-radius: 12px; margin-bottom: 12px; background: white; border-left: 6px solid #ccc; transition: transform 0.2s; position: relative; }
+        .card-contestant.active-status { border-left-color: #28a745; background-color: #e8f5e9; }
+        
+        /* สไตล์ตอนลาก */
+        .sortable-ghost { opacity: 0.4; background: #c8ebfb; border: 2px dashed #2196f3; }
+        .drag-handle { cursor: grab; color: #aaa; font-size: 24px; padding: 0 10px; display: none; } /* ซ่อนที่จับก่อน */
+        
+        /* โหมด Admin จะโชว์ที่จับ */
+        .admin-mode .drag-handle { display: block; }
+        .admin-mode .btn-score { display: none; } /* ซ่อนปุ่มให้คะแนนตอนจัดคิว */
+        
+        .admin-toggle { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+        .category-badge { font-size: 0.75rem; background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-bg text-center">
-        <h3 class="fw-bold m-0">🏆 ระบบให้คะแนน</h3>
-        <small>มหกรรมวิชาการสาธารณสุขจังหวัดสงขลา ปี 2569</small>
+        <h4 class="fw-bold m-0">🏆 ระบบคิว & คะแนน</h4>
+        <small>คปสอ.อำเภอสะเดา</small>
+        <button class="admin-toggle" onclick="toggleAdmin()">⚙️ จัดคิว</button>
     </div>
 
     <div class="container" style="max-width: 800px;">
-        <div id="contestant-list">
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary"></div>
-                <p class="mt-2 text-muted">กำลังโหลดรายชื่อ...</p>
-            </div>
+        <div id="contestant-list" class="list-group">
+            <div class="text-center py-5"><div class="spinner-border text-primary"></div><p>กำลังโหลด...</p></div>
         </div>
     </div>
 
-    <button class="btn btn-primary btn-refresh" onclick="loadData()">↻</button>
-
     <script>
-        // 🔴🔴 1. ใส่ Web App URL ของคุณที่นี่ 🔴🔴
-        const API_URL = "LINK_WEB_APP_GOOGLE_SCRIPT_ของคุณ_ใส่ตรงนี้";
+        // 🔴🔴 ใส่ Web App URL ของคุณ 🔴🔴
+        const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
 
-        // ⚙️ 2. ตั้งค่าเกณฑ์คะแนนตาม PDF (ห้ามแก้ถ้าไม่จำเป็น)
+        // เก็บข้อมูลดิบ
+        let allData = [];
+        let isAdmin = false;
+        let sortable = null;
+
+        // เกณฑ์คะแนน (ย่อ)
         const CRITERIA = {
-            // กลุ่ม Oral Presentation (วิจัย/R2R/CQI)
-            'Oral': [
-                { name: 'ส่วนที่ 1: เนื้อหาบทคัดย่อ/ฉบับสมบูรณ์', max: 80, hint: 'ชื่อเรื่อง, ที่มา, วัตถุประสงค์, วิธีการ, ผลลัพธ์' },
-                { name: 'ส่วนที่ 2: การนำเสนอ/ใช้ประโยชน์', max: 20, hint: 'บุคลิกภาพ, การนำไปใช้, ตอบคำถาม' }
-            ],
-            // กลุ่ม Poster Presentation (วิจัย/R2R/นวัตกรรม)
-            'Poster': [
-                { name: 'ส่วนที่ 1: เนื้อหา', max: 50, hint: 'ความน่าสนใจ, ความถูกต้อง, การสรุปผล' },
-                { name: 'ส่วนที่ 2: การนำเสนอ/ใช้ประโยชน์', max: 50, hint: 'บุคลิกภาพ, องค์ประกอบภาพ, การนำไปใช้' }
-            ],
-            // กลุ่มเรื่องเล่า
-            'Story': [
-                { name: 'ส่วนที่ 1: เนื้อเรื่อง/บท', max: 70, hint: 'แก่นเรื่อง, การเดินเรื่อง, แรงบันดาลใจ' },
-                { name: 'ส่วนที่ 2: การนำเสนอ', max: 30, hint: 'ลีลาการเล่า, สื่อประกอบ, ตอบคำถาม' }
-            ],
-            // กลุ่ม Photo Voice
-            'Photo': [
-                { name: 'ส่วนที่ 1: ชื่อภาพ/เนื้อหา', max: 30, hint: 'สัมพันธ์กับภาพ, สื่อความหมาย' },
-                { name: 'ส่วนที่ 2: ภาพและเทคนิค', max: 50, hint: 'ความคิดสร้างสรรค์, ความคมชัด, องค์ประกอบ' },
-                { name: 'ส่วนที่ 3: การนำเสนอ', max: 20, hint: 'บุคลิกภาพ, ตอบคำถาม' }
-            ],
-            // กลุ่มหนังสั้น
-            'Film': [
-                { name: 'ส่วนที่ 1: เนื้อหา', max: 40, hint: 'การร้อยเรียง, สะท้อนความรู้สึก' },
-                { name: 'ส่วนที่ 2: การนำเสนอ', max: 20, hint: 'เข้าใจง่าย, ดึงดูด' },
-                { name: 'ส่วนที่ 3: ผลที่ได้', max: 20, hint: 'ความคิดสร้างสรรค์, บทเรียน' },
-                { name: 'ส่วนที่ 4: เทคนิคถ่ายทำ', max: 20, hint: 'มุมกล้อง, ตัดต่อ, เสียง' }
-            ],
-            // ค่าเริ่มต้น (ถ้าพิมพ์ Category ไม่ตรง)
-            'Default': [ { name: 'คะแนนรวม', max: 100, hint: 'คะแนนเต็ม 100' } ]
+            'Default': [{name:'คะแนนรวม', max:100}],
+            'Oral': [{name:'เนื้อหา', max:80}, {name:'นำเสนอ', max:20}],
+            'Poster': [{name:'เนื้อหา', max:50}, {name:'นำเสนอ', max:50}],
+            'Film': [{name:'เนื้อหา', max:40}, {name:'นำเสนอ', max:20}, {name:'ผลลัพธ์', max:20}, {name:'เทคนิค', max:20}],
+            'Photo': [{name:'เนื้อหา', max:30}, {name:'ภาพ', max:50}, {name:'นำเสนอ', max:20}]
         };
 
         window.onload = loadData;
 
         function loadData() {
-            const btn = document.querySelector('.btn-refresh');
-            btn.classList.add('disabled'); // กันกดรัว
-            
             fetch(API_URL + "?action=getContestants")
                 .then(res => res.json())
                 .then(data => {
+                    allData = data;
                     renderList(data);
-                    btn.classList.remove('disabled');
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire('โหลดข้อมูลไม่ได้', 'กรุณาเช็คอินเทอร์เน็ต', 'error');
-                    btn.classList.remove('disabled');
                 });
         }
 
         function renderList(data) {
             const container = document.getElementById('contestant-list');
             container.innerHTML = '';
-
-            if(data.length === 0) {
-                container.innerHTML = '<div class="text-center mt-5 text-muted">ยังไม่มีรายชื่อผู้เข้าประกวด</div>';
-                return;
-            }
-
+            
             data.forEach(row => {
-                // Mapping: A=0(ID), B=1(Name), C=2(Category), D=3(Org), E=4(Status)
                 let id = row[0];
                 let name = row[1];
                 let category = row[2];
                 let org = row[3];
                 let status = row[4];
+                let activeClass = (status === 'Active') ? 'active-status' : '';
 
-                let isActive = (status === 'Active' || status === 'Presenting');
-                let activeClass = isActive ? 'active-status' : '';
-                let statusBadge = isActive ? '<span class="badge bg-success mb-2">กำลังนำเสนอ</span>' : '';
-
+                // HTML การ์ด
                 let html = `
-                <div class="card card-contestant p-3 ${activeClass}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div style="flex:1;">
-                            ${statusBadge}
-                            <h5 class="fw-bold mb-1">${name}</h5>
-                            <span class="category-badge">${category}</span>
-                            <small class="text-muted d-block mt-1">🏥 ${org}</small>
+                <div class="card card-contestant p-3 ${activeClass}" data-id="${id}">
+                    <div class="d-flex align-items-center">
+                        <div class="drag-handle">☰</div>
+                        
+                        <div class="flex-grow-1 ps-2">
+                            ${status === 'Active' ? '<span class="badge bg-success">กำลังนำเสนอ</span>' : ''}
+                            <h6 class="fw-bold mb-1">${name}</h6>
+                            <span class="category-badge">${category}</span> <small class="text-muted ms-1">${org}</small>
                         </div>
-                        <button class="btn btn-outline-success rounded-pill px-4 shadow-sm" 
-                            onclick="openScoreModal('${id}', '${name}', '${category}')">
+
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 btn-score" 
+                            onclick="openScore('${id}', '${name}', '${category}')">
                             ให้คะแนน
                         </button>
                     </div>
                 </div>`;
                 container.innerHTML += html;
             });
+
+            // เริ่มระบบ Drag & Drop (แต่ยังไม่เปิดใช้งาน จนกว่าจะเป็น Admin)
+            if(sortable) sortable.destroy();
+            sortable = new Sortable(container, {
+                animation: 150,
+                handle: '.drag-handle', // ลากได้เฉพาะตรงไอคอน
+                disabled: !isAdmin, // ปิดไว้ก่อน
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) {
+                    saveNewOrder(); // ลากเสร็จ บันทึกทันที
+                }
+            });
+            
+            updateAdminUI();
         }
 
-        async function openScoreModal(id, name, categoryRaw) {
-            // เลือกเกณฑ์คะแนนตามคำค้นหาใน Category
-            let key = 'Default';
-            if (categoryRaw.includes('Oral') || categoryRaw.includes('R2R') || categoryRaw.includes('CQI')) key = 'Oral';
-            else if (categoryRaw.includes('Poster') || categoryRaw.includes('นวัตกรรม')) key = 'Poster';
-            else if (categoryRaw.includes('เรื่องเล่า') || categoryRaw.includes('Story')) key = 'Story';
-            else if (categoryRaw.includes('Photo')) key = 'Photo';
-            else if (categoryRaw.includes('หนัง')) key = 'Film';
-
-            const criteriaList = CRITERIA[key];
-
-            // สร้างฟอร์ม
-            let formHtml = `<div class="alert alert-secondary text-start py-2"><small>เกณฑ์: ${categoryRaw}</small></div>`;
-            criteriaList.forEach((c, i) => {
-                formHtml += `
-                <div class="mb-3 text-start">
-                    <label class="form-label fw-bold">${c.name} <span class="text-muted">(เต็ม ${c.max})</span></label>
-                    <input type="number" id="score_${i}" class="form-control score-input" 
-                        placeholder="0-${c.max}" max="${c.max}" oninput="calcTotal()">
-                    <div class="form-text text-muted" style="font-size:12px;">${c.hint}</div>
-                </div>`;
-            });
-            formHtml += `<div class="h5 fw-bold text-center mt-3 text-primary">รวม: <span id="totalDisplay">0</span> / 100</div>`;
-
-            // ถามชื่อกรรมการ (จำค่าไว้ไม่ต้องพิมพ์ใหม่)
-            let judge = localStorage.getItem('judge_name');
-            if (!judge) {
-                const { value: jName } = await Swal.fire({ 
-                    title: 'ลงชื่อกรรมการ', input: 'text', inputPlaceholder: 'ชื่อ-สกุล', confirmButtonText: 'ตกลง' 
+        // --- ระบบ Admin / จัดคิว ---
+        async function toggleAdmin() {
+            if (!isAdmin) {
+                const { value: pass } = await Swal.fire({
+                    title: 'โหมดจัดคิว (Admin)',
+                    input: 'password',
+                    inputPlaceholder: 'ใส่รหัสผ่าน (1234)',
+                    confirmButtonText: 'เข้าสู่ระบบ'
                 });
-                if(!jName) return;
-                judge = jName;
-                localStorage.setItem('judge_name', judge);
+                if (pass === '1234') { // รหัสง่ายๆ
+                    isAdmin = true;
+                    Swal.fire({icon:'success', title:'เปิดโหมดจัดคิวแล้ว', text:'ลากแถบ ☰ เพื่อย้ายตำแหน่ง', timer: 1500, showConfirmButton:false});
+                    updateAdminUI();
+                }
+            } else {
+                isAdmin = false;
+                updateAdminUI();
+            }
+        }
+
+        function updateAdminUI() {
+            const container = document.getElementById('contestant-list');
+            if (isAdmin) {
+                container.classList.add('admin-mode');
+                if(sortable) sortable.option("disabled", false); // เปิดให้ลาก
+            } else {
+                container.classList.remove('admin-mode');
+                if(sortable) sortable.option("disabled", true); // ปิดการลาก
+            }
+        }
+
+        function saveNewOrder() {
+            // ดึงลำดับ ID ใหม่จากหน้าจอ
+            const items = document.querySelectorAll('.card-contestant');
+            let newIds = [];
+            items.forEach(item => newIds.push(item.getAttribute('data-id')));
+
+            // ส่งไปบันทึกที่ Google Sheet
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+            Toast.fire({icon: 'info', title: 'กำลังบันทึกลำดับ...'});
+
+            fetch(API_URL + "?action=updateOrder&ids=" + newIds.join(","))
+                .then(res => res.text())
+                .then(msg => Toast.fire({icon: 'success', title: 'จัดคิวเรียบร้อย!'}))
+                .catch(err => Toast.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ'}));
+        }
+
+        // --- ระบบให้คะแนน (เหมือนเดิม) ---
+        async function openScore(id, name, cat) {
+            let key = 'Default';
+            if (cat.includes('Oral') || cat.includes('R2R')) key = 'Oral';
+            else if (cat.includes('Poster')) key = 'Poster';
+            else if (cat.includes('Film') || cat.includes('หนัง')) key = 'Film';
+            else if (cat.includes('Photo')) key = 'Photo';
+
+            let criteria = CRITERIA[key];
+            let html = '';
+            criteria.forEach((c,i) => {
+                html += `<div class="mb-2 text-start"><label>${c.name} (Max ${c.max})</label>
+                <input type="number" id="s${i}" class="form-control" max="${c.max}"></div>`;
+            });
+
+            // ถามชื่อกรรมการ
+            let judge = localStorage.getItem('judge') || '';
+            if(!judge) {
+                let {value:j} = await Swal.fire({title:'ชื่อกรรมการ', input:'text'});
+                if(j) { judge = j; localStorage.setItem('judge', j); } else return;
             }
 
-            // แสดง Popup
-            const { isConfirmed } = await Swal.fire({
-                title: `ให้คะแนน: ${name}`,
-                html: formHtml,
-                showCancelButton: true,
-                confirmButtonText: 'บันทึกคะแนน',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    let total = 0;
-                    let details = [];
-                    for(let i=0; i<criteriaList.length; i++) {
-                        let val = parseFloat(document.getElementById(`score_${i}`).value) || 0;
-                        if(val > criteriaList[i].max) {
-                            Swal.showValidationMessage(`ช่องที่ ${i+1} ห้ามเกิน ${criteriaList[i].max}`);
-                            return false;
-                        }
-                        total += val;
-                        details.push(`${criteriaList[i].name}:${val}`);
-                    }
-                    return { total, details: details.join('|') };
-                }
+            let {isConfirmed} = await Swal.fire({
+                title: name, html: html, showCancelButton:true, confirmButtonText:'บันทึก'
             });
 
             if(isConfirmed) {
-                // ส่งข้อมูล
-                const result = Swal.getPopup().querySelector('.swal2-confirm').value; // เทคนิคดึงค่าจาก preConfirm
-                // คำนวณอีกรอบเพื่อความชัวร์
-                let total = 0;
-                let detailsStr = "";
-                criteriaList.forEach((c, i) => {
-                     let val = parseFloat(document.getElementById(`score_${i}`).value) || 0;
-                     total += val;
-                     detailsStr += `[${c.name}: ${val}] `;
+                let total=0; 
+                let detail=[];
+                criteria.forEach((c,i) => {
+                    let val = Number(document.getElementById(`s${i}`).value);
+                    total += val;
+                    detail.push(`${c.name}:${val}`);
                 });
-
-                Swal.fire({title:'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
                 
-                fetch(`${API_URL}?action=submitScore&id=${id}&judge=${judge}&score=${total}&detail=${detailsStr}`)
-                    .then(() => Swal.fire('สำเร็จ', 'บันทึกคะแนนเรียบร้อย', 'success'))
-                    .catch(() => Swal.fire('Error', 'ส่งข้อมูลไม่ผ่าน', 'error'));
+                Swal.showLoading();
+                fetch(`${API_URL}?action=submitScore&id=${id}&judge=${judge}&score=${total}&detail=${detail.join('|')}`)
+                .then(() => Swal.fire('สำเร็จ', '', 'success'));
             }
-        }
-
-        function calcTotal() {
-            let sum = 0;
-            document.querySelectorAll('.score-input').forEach(inp => sum += (parseFloat(inp.value) || 0));
-            document.getElementById('totalDisplay').innerText = sum;
         }
     </script>
 </body>

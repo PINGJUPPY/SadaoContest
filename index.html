@@ -134,6 +134,15 @@
             background: #000; z-index: 9999; display: flex; flex-direction: column; 
             justify-content: center; align-items: center;
         }
+        
+        /* Logo Styling */
+        .login-logo {
+            max-width: 150px; height: auto; margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.4)); /* เพิ่มแสงให้โลโก้ */
+        }
+        .navbar-logo {
+            height: 45px; width: auto; margin-right: 15px;
+        }
     </style>
 </head>
 <body>
@@ -142,9 +151,8 @@
 
     <div id="login-container">
         <div class="tech-panel p-5 text-center" style="max-width: 400px; width: 90%;">
-            <div class="mb-4">
-                <i class="fa-solid fa-shield-virus fa-4x" style="color: var(--primary);"></i>
-            </div>
+            <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" alt="SDH Logo" class="login-logo">
+            
             <h2 class="neon-title mb-2">ACCESS CONTROL</h2>
             <p class="text-muted mb-4" style="font-size: 0.8rem;">SADAO MED-TECH SYSTEM v2.0</p>
             
@@ -167,10 +175,11 @@
     <div id="app-container">
         
         <nav class="navbar navbar-dark bg-transparent border-bottom border-secondary mb-4 p-3">
-            <div class="container">
-                <span class="navbar-brand neon-title" style="font-size: 1.2rem;">
-                    <i class="fa-solid fa-dna"></i> SADAO MED-TECH
-                </span>
+            <div class="container align-items-center">
+                <a class="navbar-brand neon-title d-flex align-items-center" href="#" style="font-size: 1.2rem;">
+                    <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" alt="SDH Logo" class="navbar-logo">
+                    SADAO MED-TECH
+                </a>
                 <div class="d-flex align-items-center gap-3">
                     <div class="text-end d-none d-md-block">
                         <small class="d-block text-muted" style="font-size: 0.7rem;">LOGGED IN AS</small>
@@ -212,7 +221,7 @@
             <div id="contestant-container"></div>
         </section>
 
-        <section id="view-rank" class="container fade-in mt-5">
+        <section id="view-rank" class="container fade-in mt-5 mb-5">
             <div class="tech-panel p-3">
                 <h5 class="neon-title mb-3"><i class="fa-solid fa-chart-line"></i> REAL-TIME RANKING</h5>
                 <table class="table table-dark table-sm" style="background: transparent;">
@@ -225,7 +234,7 @@
     </div>
 
     <script>
-        // 🔴🔴 URL ของคุณ 🔴🔴
+        // 🔴🔴 URL ของคุณ (ใช้ URL เดิมได้เลย ถ้ายังไม่ได้ deploy ใหม่) 🔴🔴
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
 
         // Global State
@@ -268,7 +277,6 @@
             const p = document.getElementById('pass').value;
             if(!u || !p) return Swal.fire('Error', 'Input Missing', 'warning');
 
-            // Show Fake Loader while checking
             document.getElementById('system-loader').style.display = 'flex';
 
             fetch(`${API_URL}?action=login&u=${u}&p=${p}`)
@@ -277,8 +285,6 @@
                 if(data.status === 'success') {
                     currentUser = data.user;
                     localStorage.setItem('sadao_user', JSON.stringify(currentUser));
-                    
-                    // หน่วงเวลา 1.5 วินาที ให้ดูเหมือนโหลดระบบจริง
                     setTimeout(() => {
                         bootSystem();
                     }, 1500);
@@ -290,21 +296,18 @@
         }
 
         function bootSystem() {
-            // 1. ซ่อน Login -> 2. โชว์ Loader (ถ้ายังไม่โชว์) -> 3. เปิด App
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('system-loader').style.display = 'flex';
-            
-            // โหลดข้อมูล
             fetchData().then(() => {
                 document.getElementById('system-loader').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block'; // เปลี่ยนหน้าต่าง!
+                document.getElementById('app-container').style.display = 'block';
                 setupUI();
             });
         }
 
         function doLogout() {
             localStorage.removeItem('sadao_user');
-            location.reload(); // รีโหลดหน้าเว็บ กลับไปหน้า Login
+            location.reload();
         }
 
         // --- Data & UI Setup ---
@@ -316,23 +319,16 @@
 
         function setupUI() {
             document.getElementById('user-role-display').innerText = currentUser.name.toUpperCase();
-            
-            // Admin Check
             if(currentUser.role === 'Admin') {
                 document.getElementById('admin-toolbar').classList.remove('d-none');
             }
-
-            // Create Dashboard Cards
             const grid = document.getElementById('cat-grid');
             grid.innerHTML = '';
-            
             let allowed = (currentUser.role === 'Admin') ? Object.keys(CATS) : currentUser.categories.split(',');
-
             allowed.forEach(key => {
                 key = key.trim();
                 let confKey = Object.keys(CATS).find(k => key.includes(k)) || 'Oral';
                 let info = CATS[confKey];
-                
                 grid.innerHTML += `
                 <div class="col-6 col-md-4">
                     <div class="tech-panel cat-card" onclick="openCat('${key}')">
@@ -354,21 +350,17 @@
         function goHome() {
             document.getElementById('view-list').style.display = 'none';
             document.getElementById('view-dashboard').style.display = 'block';
-            fetchData(); // Refresh data when going home
+            fetchData();
         }
 
         function renderList() {
             const cont = document.getElementById('contestant-container');
             cont.innerHTML = '';
-            
             let list = allData.filter(r => r[2].includes(currentCat));
-            
             if(list.length === 0) cont.innerHTML = '<p class="text-center text-muted">NO DATA</p>';
-
             list.forEach(row => {
                 let id = row[0], name = row[1], org = row[3], status = row[4];
                 let active = status === 'Active';
-                
                 cont.innerHTML += `
                 <div class="tech-panel card-player ${active ? 'active' : ''}" data-id="${id}">
                     <div class="d-flex align-items-center">
@@ -382,16 +374,9 @@
                     </div>
                 </div>`;
             });
-
-            // Re-init Sortable for Admin
             if(sortableInstance) sortableInstance.destroy();
             const el = document.getElementById('contestant-container');
-            sortableInstance = new Sortable(el, {
-                handle: '.drag-handle',
-                disabled: !isEditMode,
-                animation: 150,
-                onEnd: () => saveOrder()
-            });
+            sortableInstance = new Sortable(el, { handle: '.drag-handle', disabled: !isEditMode, animation: 150, onEnd: () => saveOrder() });
         }
 
         // --- Admin Functions ---
@@ -399,7 +384,6 @@
             isEditMode = !isEditMode;
             document.getElementById('contestant-container').classList.toggle('admin-mode');
             if(sortableInstance) sortableInstance.option('disabled', !isEditMode);
-            
             const btn = document.querySelector('button[onclick="toggleEditMode()"]');
             if(isEditMode) {
                 btn.classList.remove('btn-outline-warning'); btn.classList.add('btn-warning');
@@ -410,28 +394,16 @@
         }
 
         async function addNewContestant() {
-            // สร้าง Select Options
             let opts = '';
             Object.keys(CATS).forEach(k => opts += `<option value="${k}">${CATS[k].label}</option>`);
-
             const { value: form } = await Swal.fire({
-                title: 'NEW REGISTRATION',
-                background: '#050a10', color: '#fff',
-                html: `
-                    <input id="swal-name" class="input-cyber" placeholder="NAME / TEAM">
-                    <input id="swal-org" class="input-cyber" placeholder="ORGANIZATION">
-                    <select id="swal-cat" class="input-cyber" style="background:#111">${opts}</select>
-                `,
+                title: 'NEW REGISTRATION', background: '#050a10', color: '#fff',
+                html: `<input id="swal-name" class="input-cyber" placeholder="NAME / TEAM"><input id="swal-org" class="input-cyber" placeholder="ORGANIZATION"><select id="swal-cat" class="input-cyber" style="background:#111">${opts}</select>`,
                 showCancelButton: true,
                 preConfirm: () => {
-                    return {
-                        name: document.getElementById('swal-name').value,
-                        org: document.getElementById('swal-org').value,
-                        cat: document.getElementById('swal-cat').value
-                    }
+                    return { name: document.getElementById('swal-name').value, org: document.getElementById('swal-org').value, cat: document.getElementById('swal-cat').value }
                 }
             });
-
             if(form && form.name) {
                 Swal.fire({title:'SAVING...', background:'#000', color:'#fff', didOpen:()=>Swal.showLoading()});
                 fetch(`${API_URL}?action=addContestant&name=${form.name}&category=${form.cat}&org=${form.org}`)
@@ -451,25 +423,19 @@
         async function score(id, name, catRaw) {
             let key = Object.keys(CRITERIA).find(k => catRaw.includes(k)) || 'Default';
             let crits = CRITERIA[key];
-
             let html = `<div class="text-start mb-3 text-muted">JUDGE: ${currentUser.name}</div>`;
             crits.forEach((c, i) => {
-                html += `<div class="mb-2 text-start"><label class="text-info">${c.name} /${c.max}</label>
-                <input type="number" id="sc_${i}" class="input-cyber" max="${c.max}"></div>`;
+                html += `<div class="mb-2 text-start"><label class="text-info">${c.name} /${c.max}</label><input type="number" id="sc_${i}" class="input-cyber" max="${c.max}"></div>`;
             });
-
             const { isConfirmed } = await Swal.fire({
-                title: name, html: html, background: '#0a1423', color: '#fff',
-                showCancelButton: true, confirmButtonText: 'CONFIRM', confirmButtonColor: '#00f2ff'
+                title: name, html: html, background: '#0a1423', color: '#fff', showCancelButton: true, confirmButtonText: 'CONFIRM', confirmButtonColor: '#00f2ff'
             });
-
             if(isConfirmed) {
                 let total = 0, det = [];
                 crits.forEach((c, i) => {
                     let v = Number(document.getElementById(`sc_${i}`).value) || 0;
                     total += v; det.push(`${c.name}:${v}`);
                 });
-
                 Swal.fire({title:'UPLOADING...', background:'#000', color:'#fff', didOpen:()=>Swal.showLoading()});
                 fetch(`${API_URL}?action=submitScore&id=${id}&judge=${currentUser.name}&score=${total}&detail=${det.join('|')}`)
                 .then(() => {
@@ -480,16 +446,10 @@
         }
 
         function updateRank() {
-            // Sort by Total Score (Column index 5)
-            let sorted = [...allData].sort((a,b) => (b[5]||0) - (a[5]||0)).slice(0, 5); // Top 5
-            const tb = document.getElementById('rank-body');
-            tb.innerHTML = '';
+            let sorted = [...allData].sort((a,b) => (b[5]||0) - (a[5]||0)).slice(0, 5);
+            const tb = document.getElementById('rank-body'); tb.innerHTML = '';
             sorted.forEach((r, i) => {
-                tb.innerHTML += `<tr>
-                    <td><span class="badge bg-dark border border-secondary">${i+1}</span></td>
-                    <td>${r[1]}</td>
-                    <td class="text-end" style="color:var(--primary)">${r[5]||0}</td>
-                </tr>`;
+                tb.innerHTML += `<tr><td><span class="badge bg-dark border border-secondary">${i+1}</span></td><td>${r[1]}</td><td class="text-end" style="color:var(--primary)">${r[5]||0}</td></tr>`;
             });
         }
     </script>

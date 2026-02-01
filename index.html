@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคิว & ให้คะแนน (Sadao 2569)</title>
+    <title>ระบบลงทะเบียน & ให้คะแนน (Sadao 2569)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -11,29 +11,30 @@
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding-bottom: 80px; }
-        .header-bg { background: linear-gradient(135deg, #1565c0, #42a5f5); color: white; padding: 15px 0; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
-        
-        .card-contestant { border: none; border-radius: 12px; margin-bottom: 12px; background: white; border-left: 6px solid #ccc; transition: transform 0.2s; position: relative; }
+        .header-bg { background: linear-gradient(135deg, #0277bd, #4fc3f7); color: white; padding: 15px 0; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
+        .card-contestant { border: none; border-radius: 12px; margin-bottom: 12px; background: white; border-left: 6px solid #ccc; position: relative; }
         .card-contestant.active-status { border-left-color: #28a745; background-color: #e8f5e9; }
         
-        /* สไตล์ตอนลาก */
-        .sortable-ghost { opacity: 0.4; background: #c8ebfb; border: 2px dashed #2196f3; }
-        .drag-handle { cursor: grab; color: #aaa; font-size: 24px; padding: 0 10px; display: none; } /* ซ่อนที่จับก่อน */
-        
-        /* โหมด Admin จะโชว์ที่จับ */
+        /* ปุ่ม Admin */
+        .top-btn { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 0.9rem; margin-left: 5px; }
+        .top-btn:hover { background: rgba(255,255,255,0.4); }
+
+        .drag-handle { cursor: grab; color: #aaa; font-size: 24px; padding: 0 10px; display: none; }
         .admin-mode .drag-handle { display: block; }
-        .admin-mode .btn-score { display: none; } /* ซ่อนปุ่มให้คะแนนตอนจัดคิว */
+        .admin-mode .btn-score { display: none; }
         
-        .admin-toggle { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 5px; padding: 5px 10px; cursor: pointer; }
-        .category-badge { font-size: 0.75rem; background: #e3f2fd; color: #0d47a1; padding: 2px 8px; border-radius: 10px; }
+        .category-badge { font-size: 0.75rem; background: #e1f5fe; color: #0277bd; padding: 2px 8px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-bg text-center">
-        <h4 class="fw-bold m-0">🏆 ระบบคิว & คะแนน</h4>
+        <h4 class="fw-bold m-0">🏆 ระบบการประกวด</h4>
         <small>คปสอ.อำเภอสะเดา</small>
-        <button class="admin-toggle" onclick="toggleAdmin()">⚙️ จัดคิว</button>
+        <div class="mt-2">
+            <button class="top-btn" onclick="addNew()">➕ ลงทะเบียน</button>
+            <button class="top-btn" onclick="toggleAdmin()">⚙️ จัดคิว</button>
+        </div>
     </div>
 
     <div class="container" style="max-width: 800px;">
@@ -46,17 +47,25 @@
         // 🔴🔴 ใส่ Web App URL ของคุณ 🔴🔴
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
 
-        // เก็บข้อมูลดิบ
         let allData = [];
         let isAdmin = false;
         let sortable = null;
 
-        // เกณฑ์คะแนน (ย่อ)
+        // รายชื่อประเภทสำหรับ Dropdown
+        const CATEGORIES = [
+            'Oral Presentation (วิจัย/R2R/CQI)',
+            'Poster Presentation (วิจัย/R2R/นวัตกรรม)',
+            'Photo Voice',
+            'เรื่องเล่า (Storytelling)',
+            'หนังสั้น'
+        ];
+
         const CRITERIA = {
             'Default': [{name:'คะแนนรวม', max:100}],
             'Oral': [{name:'เนื้อหา', max:80}, {name:'นำเสนอ', max:20}],
             'Poster': [{name:'เนื้อหา', max:50}, {name:'นำเสนอ', max:50}],
             'Film': [{name:'เนื้อหา', max:40}, {name:'นำเสนอ', max:20}, {name:'ผลลัพธ์', max:20}, {name:'เทคนิค', max:20}],
+            'Story': [{name:'เนื้อหา', max:70}, {name:'นำเสนอ', max:30}],
             'Photo': [{name:'เนื้อหา', max:30}, {name:'ภาพ', max:50}, {name:'นำเสนอ', max:20}]
         };
 
@@ -81,20 +90,17 @@
                 let category = row[2];
                 let org = row[3];
                 let status = row[4];
-                let activeClass = (status === 'Active') ? 'active-status' : '';
 
-                // HTML การ์ด
                 let html = `
-                <div class="card card-contestant p-3 ${activeClass}" data-id="${id}">
+                <div class="card card-contestant p-3 ${status === 'Active' ? 'active-status' : ''}" data-id="${id}">
                     <div class="d-flex align-items-center">
                         <div class="drag-handle">☰</div>
-                        
                         <div class="flex-grow-1 ps-2">
-                            ${status === 'Active' ? '<span class="badge bg-success">กำลังนำเสนอ</span>' : ''}
+                            ${status === 'Active' ? '<span class="badge bg-success">On Stage</span>' : ''}
                             <h6 class="fw-bold mb-1">${name}</h6>
-                            <span class="category-badge">${category}</span> <small class="text-muted ms-1">${org}</small>
+                            <span class="category-badge">${category}</span> 
+                            <small class="text-muted ms-1">🏥 ${org}</small>
                         </div>
-
                         <button class="btn btn-outline-primary btn-sm rounded-pill px-3 btn-score" 
                             onclick="openScore('${id}', '${name}', '${category}')">
                             ให้คะแนน
@@ -104,34 +110,61 @@
                 container.innerHTML += html;
             });
 
-            // เริ่มระบบ Drag & Drop (แต่ยังไม่เปิดใช้งาน จนกว่าจะเป็น Admin)
             if(sortable) sortable.destroy();
             sortable = new Sortable(container, {
-                animation: 150,
-                handle: '.drag-handle', // ลากได้เฉพาะตรงไอคอน
-                disabled: !isAdmin, // ปิดไว้ก่อน
-                ghostClass: 'sortable-ghost',
-                onEnd: function (evt) {
-                    saveNewOrder(); // ลากเสร็จ บันทึกทันที
-                }
+                animation: 150, handle: '.drag-handle', disabled: !isAdmin,
+                onEnd: () => saveNewOrder()
             });
-            
             updateAdminUI();
         }
 
-        // --- ระบบ Admin / จัดคิว ---
+        // --- เพิ่มรายชื่อใหม่ (Add New) ---
+        async function addNew() {
+            // สร้าง Dropdown ตัวเลือกประเภท
+            let options = "";
+            CATEGORIES.forEach(c => options += `<option value="${c}">${c}</option>`);
+
+            const { value: formValues } = await Swal.fire({
+                title: 'ลงทะเบียนเพิ่ม',
+                html:
+                    `<input id="swal-name" class="swal2-input" placeholder="ชื่อสกุล / ชื่อทีม">` +
+                    `<input id="swal-org" class="swal2-input" placeholder="หน่วยงาน (รพ./รพ.สต.)">` +
+                    `<select id="swal-cat" class="swal2-input">${options}</select>`,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                preConfirm: () => {
+                    return {
+                        name: document.getElementById('swal-name').value,
+                        org: document.getElementById('swal-org').value,
+                        cat: document.getElementById('swal-cat').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                if(!formValues.name) return Swal.fire('แจ้งเตือน', 'กรุณาใส่ชื่อ', 'warning');
+                
+                Swal.fire({title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
+                
+                // ส่งข้อมูลไป Backend
+                fetch(`${API_URL}?action=addContestant&name=${formValues.name}&category=${formValues.cat}&org=${formValues.org}`)
+                    .then(() => {
+                        Swal.fire('สำเร็จ', 'เพิ่มรายชื่อแล้ว', 'success');
+                        loadData(); // โหลดข้อมูลใหม่ทันที
+                    })
+                    .catch(() => Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'));
+            }
+        }
+
+        // --- Admin Mode ---
         async function toggleAdmin() {
             if (!isAdmin) {
-                const { value: pass } = await Swal.fire({
-                    title: 'โหมดจัดคิว (Admin)',
-                    input: 'password',
-                    inputPlaceholder: 'ใส่รหัสผ่าน (1234)',
-                    confirmButtonText: 'เข้าสู่ระบบ'
-                });
-                if (pass === '1234') { // รหัสง่ายๆ
-                    isAdmin = true;
-                    Swal.fire({icon:'success', title:'เปิดโหมดจัดคิวแล้ว', text:'ลากแถบ ☰ เพื่อย้ายตำแหน่ง', timer: 1500, showConfirmButton:false});
-                    updateAdminUI();
+                const { value: pass } = await Swal.fire({ title: 'รหัส Admin', input: 'password', inputPlaceholder: '1234' });
+                if (pass === '1234') { 
+                    isAdmin = true; 
+                    updateAdminUI(); 
+                    Swal.fire({toast:true, position:'top-end', icon:'success', title:'Admin Mode ON', showConfirmButton:false, timer:1500});
                 }
             } else {
                 isAdmin = false;
@@ -140,38 +173,23 @@
         }
 
         function updateAdminUI() {
-            const container = document.getElementById('contestant-list');
-            if (isAdmin) {
-                container.classList.add('admin-mode');
-                if(sortable) sortable.option("disabled", false); // เปิดให้ลาก
-            } else {
-                container.classList.remove('admin-mode');
-                if(sortable) sortable.option("disabled", true); // ปิดการลาก
-            }
+            const c = document.getElementById('contestant-list');
+            if (isAdmin) { c.classList.add('admin-mode'); sortable.option("disabled", false); }
+            else { c.classList.remove('admin-mode'); sortable.option("disabled", true); }
         }
 
         function saveNewOrder() {
-            // ดึงลำดับ ID ใหม่จากหน้าจอ
-            const items = document.querySelectorAll('.card-contestant');
-            let newIds = [];
-            items.forEach(item => newIds.push(item.getAttribute('data-id')));
-
-            // ส่งไปบันทึกที่ Google Sheet
-            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
-            Toast.fire({icon: 'info', title: 'กำลังบันทึกลำดับ...'});
-
-            fetch(API_URL + "?action=updateOrder&ids=" + newIds.join(","))
-                .then(res => res.text())
-                .then(msg => Toast.fire({icon: 'success', title: 'จัดคิวเรียบร้อย!'}))
-                .catch(err => Toast.fire({icon: 'error', title: 'บันทึกไม่สำเร็จ'}));
+            const ids = Array.from(document.querySelectorAll('.card-contestant')).map(el => el.getAttribute('data-id'));
+            fetch(API_URL + "?action=updateOrder&ids=" + ids.join(","));
         }
 
-        // --- ระบบให้คะแนน (เหมือนเดิม) ---
+        // --- Scoring (เหมือนเดิม) ---
         async function openScore(id, name, cat) {
             let key = 'Default';
             if (cat.includes('Oral') || cat.includes('R2R')) key = 'Oral';
             else if (cat.includes('Poster')) key = 'Poster';
             else if (cat.includes('Film') || cat.includes('หนัง')) key = 'Film';
+            else if (cat.includes('Story') || cat.includes('เรื่องเล่า')) key = 'Story';
             else if (cat.includes('Photo')) key = 'Photo';
 
             let criteria = CRITERIA[key];
@@ -181,26 +199,19 @@
                 <input type="number" id="s${i}" class="form-control" max="${c.max}"></div>`;
             });
 
-            // ถามชื่อกรรมการ
             let judge = localStorage.getItem('judge') || '';
             if(!judge) {
                 let {value:j} = await Swal.fire({title:'ชื่อกรรมการ', input:'text'});
                 if(j) { judge = j; localStorage.setItem('judge', j); } else return;
             }
 
-            let {isConfirmed} = await Swal.fire({
-                title: name, html: html, showCancelButton:true, confirmButtonText:'บันทึก'
-            });
-
+            let {isConfirmed} = await Swal.fire({ title: name, html: html, showCancelButton:true, confirmButtonText:'บันทึก' });
             if(isConfirmed) {
-                let total=0; 
-                let detail=[];
+                let total=0; let detail=[];
                 criteria.forEach((c,i) => {
                     let val = Number(document.getElementById(`s${i}`).value);
-                    total += val;
-                    detail.push(`${c.name}:${val}`);
+                    total += val; detail.push(`${c.name}:${val}`);
                 });
-                
                 Swal.showLoading();
                 fetch(`${API_URL}?action=submitScore&id=${id}&judge=${judge}&score=${total}&detail=${detail.join('|')}`)
                 .then(() => Swal.fire('สำเร็จ', '', 'success'));

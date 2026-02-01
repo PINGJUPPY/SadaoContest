@@ -3,155 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบให้คะแนนการประกวด (Sadao Contest)</title>
+    <title>ระบบให้คะแนนการประกวด (Sadao 2569)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding-bottom: 50px; }
-        .header-bg { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; padding: 30px 0; margin-bottom: 20px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-contestant { border: none; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; background: white; }
-        .card-contestant:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .status-badge { position: absolute; top: 10px; right: 10px; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .category-label { font-size: 0.85rem; color: #6c757d; background-color: #e9ecef; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 5px; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding-bottom: 60px; }
+        .header-bg { background: linear-gradient(135deg, #00695c, #4db6ac); color: white; padding: 20px 0; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card-contestant { border: none; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; background: white; border-left: 6px solid #ccc; }
+        .card-contestant.active-status { border-left-color: #28a745; background-color: #e8f5e9; transform: scale(1.02); box-shadow: 0 5px 15px rgba(40,167,69,0.2); }
+        .category-badge { font-size: 0.8rem; background: #e0f7fa; color: #006064; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        .btn-refresh { position: fixed; bottom: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999; }
     </style>
 </head>
 <body>
 
     <div class="header-bg text-center">
-        <div class="container">
-            <h2 class="fw-bold">🏆 ระบบให้คะแนน</h2>
-            <p class="mb-0">การประกวดผลงานวิชาการ คปสอ.อำเภอสะเดา</p>
-        </div>
+        <h3 class="fw-bold m-0">🏆 ระบบให้คะแนน</h3>
+        <small>มหกรรมวิชาการสาธารณสุขจังหวัดสงขลา ปี 2569</small>
     </div>
 
     <div class="container" style="max-width: 800px;">
-        
-        <div class="d-flex justify-content-end mb-3">
-            <button class="btn btn-outline-primary rounded-pill px-4" onclick="loadData()">
-                🔄 รีเฟรชรายชื่อ
-            </button>
-        </div>
-
-        <div id="contestant-list"></div>
-
-    </div>
-
-    <div id="loading" class="loading-overlay">
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-            <p class="mt-2 fw-bold text-primary">กำลังเชื่อมต่อฐานข้อมูล...</p>
+        <div id="contestant-list">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted">กำลังโหลดรายชื่อ...</p>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <script>
-        // 🟢 ลิงก์ Web App ของคุณ (ใส่ให้แล้ว)
-        const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
+    <button class="btn btn-primary btn-refresh" onclick="loadData()">↻</button>
 
-        // โหลดข้อมูลทันทีเมื่อเปิดเว็บ
+    <script>
+        // 🔴🔴 1. ใส่ Web App URL ของคุณที่นี่ 🔴🔴
+        const API_URL = "LINK_WEB_APP_GOOGLE_SCRIPT_ของคุณ_ใส่ตรงนี้";
+
+        // ⚙️ 2. ตั้งค่าเกณฑ์คะแนนตาม PDF (ห้ามแก้ถ้าไม่จำเป็น)
+        const CRITERIA = {
+            // กลุ่ม Oral Presentation (วิจัย/R2R/CQI)
+            'Oral': [
+                { name: 'ส่วนที่ 1: เนื้อหาบทคัดย่อ/ฉบับสมบูรณ์', max: 80, hint: 'ชื่อเรื่อง, ที่มา, วัตถุประสงค์, วิธีการ, ผลลัพธ์' },
+                { name: 'ส่วนที่ 2: การนำเสนอ/ใช้ประโยชน์', max: 20, hint: 'บุคลิกภาพ, การนำไปใช้, ตอบคำถาม' }
+            ],
+            // กลุ่ม Poster Presentation (วิจัย/R2R/นวัตกรรม)
+            'Poster': [
+                { name: 'ส่วนที่ 1: เนื้อหา', max: 50, hint: 'ความน่าสนใจ, ความถูกต้อง, การสรุปผล' },
+                { name: 'ส่วนที่ 2: การนำเสนอ/ใช้ประโยชน์', max: 50, hint: 'บุคลิกภาพ, องค์ประกอบภาพ, การนำไปใช้' }
+            ],
+            // กลุ่มเรื่องเล่า
+            'Story': [
+                { name: 'ส่วนที่ 1: เนื้อเรื่อง/บท', max: 70, hint: 'แก่นเรื่อง, การเดินเรื่อง, แรงบันดาลใจ' },
+                { name: 'ส่วนที่ 2: การนำเสนอ', max: 30, hint: 'ลีลาการเล่า, สื่อประกอบ, ตอบคำถาม' }
+            ],
+            // กลุ่ม Photo Voice
+            'Photo': [
+                { name: 'ส่วนที่ 1: ชื่อภาพ/เนื้อหา', max: 30, hint: 'สัมพันธ์กับภาพ, สื่อความหมาย' },
+                { name: 'ส่วนที่ 2: ภาพและเทคนิค', max: 50, hint: 'ความคิดสร้างสรรค์, ความคมชัด, องค์ประกอบ' },
+                { name: 'ส่วนที่ 3: การนำเสนอ', max: 20, hint: 'บุคลิกภาพ, ตอบคำถาม' }
+            ],
+            // กลุ่มหนังสั้น
+            'Film': [
+                { name: 'ส่วนที่ 1: เนื้อหา', max: 40, hint: 'การร้อยเรียง, สะท้อนความรู้สึก' },
+                { name: 'ส่วนที่ 2: การนำเสนอ', max: 20, hint: 'เข้าใจง่าย, ดึงดูด' },
+                { name: 'ส่วนที่ 3: ผลที่ได้', max: 20, hint: 'ความคิดสร้างสรรค์, บทเรียน' },
+                { name: 'ส่วนที่ 4: เทคนิคถ่ายทำ', max: 20, hint: 'มุมกล้อง, ตัดต่อ, เสียง' }
+            ],
+            // ค่าเริ่มต้น (ถ้าพิมพ์ Category ไม่ตรง)
+            'Default': [ { name: 'คะแนนรวม', max: 100, hint: 'คะแนนเต็ม 100' } ]
+        };
+
         window.onload = loadData;
 
-        // ฟังก์ชันดึงข้อมูลจาก Google Sheet
         function loadData() {
-            document.getElementById('loading').style.display = 'flex';
+            const btn = document.querySelector('.btn-refresh');
+            btn.classList.add('disabled'); // กันกดรัว
             
             fetch(API_URL + "?action=getContestants")
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
                     renderList(data);
-                    document.getElementById('loading').style.display = 'none';
+                    btn.classList.remove('disabled');
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('loading').style.display = 'none';
-                    Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถดึงข้อมูลได้ กรุณาลองใหม่', 'error');
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('โหลดข้อมูลไม่ได้', 'กรุณาเช็คอินเทอร์เน็ต', 'error');
+                    btn.classList.remove('disabled');
                 });
         }
 
-        // ฟังก์ชันสร้างการ์ดรายชื่อบนหน้าจอ
         function renderList(data) {
             const container = document.getElementById('contestant-list');
             container.innerHTML = '';
 
-            if (data.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted py-5">ยังไม่มีรายชื่อผู้เข้าประกวด</div>';
+            if(data.length === 0) {
+                container.innerHTML = '<div class="text-center mt-5 text-muted">ยังไม่มีรายชื่อผู้เข้าประกวด</div>';
                 return;
             }
 
             data.forEach(row => {
-                // row[0]=ID, row[1]=Name, row[2]=Category, row[3]=Org, row[4]=Status
+                // Mapping: A=0(ID), B=1(Name), C=2(Category), D=3(Org), E=4(Status)
                 let id = row[0];
                 let name = row[1];
                 let category = row[2];
                 let org = row[3];
-                
-                // สร้าง HTML การ์ด
-                let cardHtml = `
-                <div class="card card-contestant p-3">
+                let status = row[4];
+
+                let isActive = (status === 'Active' || status === 'Presenting');
+                let activeClass = isActive ? 'active-status' : '';
+                let statusBadge = isActive ? '<span class="badge bg-success mb-2">กำลังนำเสนอ</span>' : '';
+
+                let html = `
+                <div class="card card-contestant p-3 ${activeClass}">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div style="flex:1;">
+                            ${statusBadge}
                             <h5 class="fw-bold mb-1">${name}</h5>
-                            <div class="category-label">📂 ${category}</div>
+                            <span class="category-badge">${category}</span>
                             <small class="text-muted d-block mt-1">🏥 ${org}</small>
                         </div>
-                        <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="giveScore('${id}', '${name}')">
-                            ✨ ให้คะแนน
+                        <button class="btn btn-outline-success rounded-pill px-4 shadow-sm" 
+                            onclick="openScoreModal('${id}', '${name}', '${category}')">
+                            ให้คะแนน
                         </button>
                     </div>
                 </div>`;
-                
-                container.innerHTML += cardHtml;
+                container.innerHTML += html;
             });
         }
 
-        // ฟังก์ชันกดให้คะแนน
-        async function giveScore(id, name) {
-            // 1. ถามชื่อกรรมการ
-            const { value: judgeName } = await Swal.fire({
-                title: 'ลงชื่อกรรมการ',
-                input: 'text',
-                inputLabel: 'กรุณาระบุชื่อของท่าน',
-                inputPlaceholder: 'เช่น นพ.สมชาย',
-                showCancelButton: true,
-                confirmButtonText: 'ถัดไป',
-                cancelButtonText: 'ยกเลิก',
-                inputValidator: (value) => {
-                    if (!value) return 'กรุณาใส่ชื่อก่อนครับ!'
-                }
+        async function openScoreModal(id, name, categoryRaw) {
+            // เลือกเกณฑ์คะแนนตามคำค้นหาใน Category
+            let key = 'Default';
+            if (categoryRaw.includes('Oral') || categoryRaw.includes('R2R') || categoryRaw.includes('CQI')) key = 'Oral';
+            else if (categoryRaw.includes('Poster') || categoryRaw.includes('นวัตกรรม')) key = 'Poster';
+            else if (categoryRaw.includes('เรื่องเล่า') || categoryRaw.includes('Story')) key = 'Story';
+            else if (categoryRaw.includes('Photo')) key = 'Photo';
+            else if (categoryRaw.includes('หนัง')) key = 'Film';
+
+            const criteriaList = CRITERIA[key];
+
+            // สร้างฟอร์ม
+            let formHtml = `<div class="alert alert-secondary text-start py-2"><small>เกณฑ์: ${categoryRaw}</small></div>`;
+            criteriaList.forEach((c, i) => {
+                formHtml += `
+                <div class="mb-3 text-start">
+                    <label class="form-label fw-bold">${c.name} <span class="text-muted">(เต็ม ${c.max})</span></label>
+                    <input type="number" id="score_${i}" class="form-control score-input" 
+                        placeholder="0-${c.max}" max="${c.max}" oninput="calcTotal()">
+                    <div class="form-text text-muted" style="font-size:12px;">${c.hint}</div>
+                </div>`;
             });
+            formHtml += `<div class="h5 fw-bold text-center mt-3 text-primary">รวม: <span id="totalDisplay">0</span> / 100</div>`;
 
-            if (!judgeName) return;
+            // ถามชื่อกรรมการ (จำค่าไว้ไม่ต้องพิมพ์ใหม่)
+            let judge = localStorage.getItem('judge_name');
+            if (!judge) {
+                const { value: jName } = await Swal.fire({ 
+                    title: 'ลงชื่อกรรมการ', input: 'text', inputPlaceholder: 'ชื่อ-สกุล', confirmButtonText: 'ตกลง' 
+                });
+                if(!jName) return;
+                judge = jName;
+                localStorage.setItem('judge_name', judge);
+            }
 
-            // 2. ถามคะแนน
-            const { value: score } = await Swal.fire({
+            // แสดง Popup
+            const { isConfirmed } = await Swal.fire({
                 title: `ให้คะแนน: ${name}`,
-                input: 'number',
-                inputLabel: 'คะแนนรวม (เต็ม 100)',
-                inputPlaceholder: 'ใส่ตัวเลข 0-100',
+                html: formHtml,
                 showCancelButton: true,
                 confirmButtonText: 'บันทึกคะแนน',
                 cancelButtonText: 'ยกเลิก',
-                inputValidator: (value) => {
-                    if (!value || value < 0 || value > 100) return 'กรุณาใส่คะแนนระหว่าง 0-100'
+                preConfirm: () => {
+                    let total = 0;
+                    let details = [];
+                    for(let i=0; i<criteriaList.length; i++) {
+                        let val = parseFloat(document.getElementById(`score_${i}`).value) || 0;
+                        if(val > criteriaList[i].max) {
+                            Swal.showValidationMessage(`ช่องที่ ${i+1} ห้ามเกิน ${criteriaList[i].max}`);
+                            return false;
+                        }
+                        total += val;
+                        details.push(`${criteriaList[i].name}:${val}`);
+                    }
+                    return { total, details: details.join('|') };
                 }
             });
 
-            if (score) {
-                // ส่งข้อมูลไปบันทึก
-                document.getElementById('loading').style.display = 'flex';
+            if(isConfirmed) {
+                // ส่งข้อมูล
+                const result = Swal.getPopup().querySelector('.swal2-confirm').value; // เทคนิคดึงค่าจาก preConfirm
+                // คำนวณอีกรอบเพื่อความชัวร์
+                let total = 0;
+                let detailsStr = "";
+                criteriaList.forEach((c, i) => {
+                     let val = parseFloat(document.getElementById(`score_${i}`).value) || 0;
+                     total += val;
+                     detailsStr += `[${c.name}: ${val}] `;
+                });
+
+                Swal.fire({title:'กำลังบันทึก...', didOpen: () => Swal.showLoading()});
                 
-                fetch(`${API_URL}?action=submitScore&id=${id}&judge=${judgeName}&score=${score}`)
-                    .then(response => response.text())
-                    .then(result => {
-                        document.getElementById('loading').style.display = 'none';
-                        Swal.fire('บันทึกสำเร็จ!', 'คะแนนถูกส่งเข้าระบบเรียบร้อยแล้ว', 'success');
-                    })
-                    .catch(err => {
-                        document.getElementById('loading').style.display = 'none';
-                        Swal.fire('Error', 'ส่งคะแนนไม่ผ่าน เช็คเน็ตแล้วลองใหม่ครับ', 'error');
-                    });
+                fetch(`${API_URL}?action=submitScore&id=${id}&judge=${judge}&score=${total}&detail=${detailsStr}`)
+                    .then(() => Swal.fire('สำเร็จ', 'บันทึกคะแนนเรียบร้อย', 'success'))
+                    .catch(() => Swal.fire('Error', 'ส่งข้อมูลไม่ผ่าน', 'error'));
             }
+        }
+
+        function calcTotal() {
+            let sum = 0;
+            document.querySelectorAll('.score-input').forEach(inp => sum += (parseFloat(inp.value) || 0));
+            document.getElementById('totalDisplay').innerText = sum;
         }
     </script>
 </body>

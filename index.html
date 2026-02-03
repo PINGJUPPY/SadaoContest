@@ -14,16 +14,16 @@
 
     <style>
         :root { --primary: #00f2ff; --secondary: #00ff88; --bg-dark: #050a10; --panel-bg: rgba(10, 20, 35, 0.95); }
+        body { font-family: 'Chakra Petch', sans-serif; background-color: var(--bg-dark); color: #e0e0e0; min-height: 100vh; padding-bottom: 60px; background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px; }
         
-        body { 
-            font-family: 'Chakra Petch', sans-serif; 
-            background-color: var(--bg-dark); 
-            color: #e0e0e0; min-height: 100vh; padding-bottom: 60px; 
-            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-        
-        /* UI Components */
+        #sci-fi-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 10, 16, 0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
+        .spinner-ring { width: 100px; height: 100px; border: 3px solid transparent; border-top: 3px solid var(--primary); border-right: 3px solid var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--primary); margin-bottom: 20px; }
+        .loading-text { font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px; margin-top: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .logo-anim { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: translateY(-5px); filter: drop-shadow(0 0 20px var(--secondary)); } }
+
         .tech-panel { background: var(--panel-bg); border: 1px solid rgba(0,242,255,0.3); border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.7); }
         .neon-text { color: var(--primary); text-shadow: 0 0 10px rgba(0,242,255,0.6); font-family: 'Orbitron'; }
         
@@ -36,7 +36,8 @@
         .card-player { border-left: 4px solid #555; margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.03); transition: 0.3s; position: relative; }
         .card-player.active { border-left-color: var(--secondary); background: linear-gradient(90deg, rgba(0,255,136,0.1), transparent); }
         .card-player.voted-by-me { border-right: 4px solid var(--primary); }
-        
+        .card-player.locked { opacity: 0.7; border-left-color: #333; }
+
         .seq-num { font-family: 'Orbitron'; font-size: 1.2rem; color: #666; width: 35px; text-align: center; font-weight: bold; }
         .active .seq-num { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
         
@@ -48,24 +49,16 @@
         
         .group-title { color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin: 20px 0 10px 0; font-family: 'Orbitron'; letter-spacing: 1px; }
 
-        /* Loader */
-        #sci-fi-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 10, 16, 0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
-        .spinner-ring { width: 100px; height: 100px; border: 3px solid transparent; border-top: 3px solid var(--primary); border-right: 3px solid var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--primary); margin-bottom: 20px; }
-        .loading-text { font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px; margin-top: 10px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Monitor Table */
         .monitor-row { border-bottom: 1px solid #222; padding: 10px 0; }
-        .status-pill { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
+        .status-pill { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
         .status-done { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00ff88; }
         .status-wait { background: rgba(255,255,0,0.1); color: #ffc107; border: 1px solid #ffc107; }
+        .status-locked { background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; }
 
         #login-container { height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1000; }
         #app-container { display: none; }
         .dev-credit { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.2); pointer-events: none; }
-        .logo-anim { animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%,100% { transform: translateY(0); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: translateY(-5px); filter: drop-shadow(0 0 20px var(--secondary)); } }
-
+        
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; padding: 20px; } }
     </style>
 </head>
@@ -74,7 +67,7 @@
     <div id="sci-fi-loader">
         <div class="spinner-ring"></div>
         <h4 class="loading-text">INITIALIZING...</h4>
-        <small class="text-muted" style="font-family:'Chakra Petch'">Connecting to Database</small>
+        <small class="text-muted" style="font-family:'Chakra Petch'">Syncing Database</small>
     </div>
 
     <div id="login-container">
@@ -107,7 +100,7 @@
                 <button class="btn btn-sm btn-outline-info" onclick="addNewContestant()"><i class="fa-solid fa-plus"></i> ลงทะเบียน</button>
                 <button class="btn btn-sm btn-outline-success" onclick="addJudge()"><i class="fa-solid fa-user-plus"></i> เพิ่มกรรมการ</button>
                 <button class="btn btn-sm btn-outline-warning" onclick="toggleEditMode()"><i class="fa-solid fa-sort"></i> จัดคิว</button>
-                <button class="btn btn-sm btn-outline-primary" onclick="showMonitor()"><i class="fa-solid fa-desktop"></i> ติดตามผล & ปริ้นท์</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="showMonitor()"><i class="fa-solid fa-desktop"></i> ติดตาม & ปิดโหวต</button>
             </div>
         </div>
 
@@ -127,7 +120,7 @@
         <section id="view-monitor" class="container" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <button class="btn btn-sm btn-outline-light" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i> BACK</button>
-                <h5 class="neon-text m-0">MONITOR & PRINT</h5>
+                <h5 class="neon-text m-0">MONITOR CENTER</h5>
                 <div style="width:30px"></div>
             </div>
             <div class="tech-panel p-3">
@@ -158,7 +151,6 @@
     <div id="print-area" style="display:none;"></div>
 
     <script>
-        // 🔴🔴 URL 🔴🔴
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
 
         const CATS = {
@@ -183,7 +175,6 @@
 
         let currentUser = null, allData = [], allVotes = {}, currentCat = '', isEditMode = false, syncInterval = null, wakeLock = null;
 
-        // Loader
         function showLoader(msg) { document.querySelector('.loading-text').innerText = msg||"PROCESSING..."; document.getElementById('sci-fi-loader').style.display = 'flex'; }
         function hideLoader() { document.getElementById('sci-fi-loader').style.display = 'none'; }
 
@@ -192,7 +183,6 @@
             if(saved) { currentUser = JSON.parse(saved); bootSystem(); }
         };
 
-        // Wake Lock
         async function requestWakeLock() { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} }
         document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock(); });
 
@@ -229,7 +219,7 @@
                 setupDashboard();
                 updateRank();
                 if(document.getElementById('view-list').style.display==='block') renderList();
-                if(document.getElementById('view-monitor').style.display==='block') renderMonitor(); // Auto update monitor
+                if(document.getElementById('view-monitor').style.display==='block') renderMonitor();
                 
                 let now = new Date();
                 document.getElementById('update-time').innerText = now.toTimeString().split(' ')[0];
@@ -259,11 +249,16 @@
             if(list.length===0) { cont.innerHTML='<div class="text-center text-muted py-5">NO DATA</div>'; return; }
             list.forEach((r, idx) => {
                 let id = r[0], active = r[5] === 'Active';
+                let isLocked = r[8] === 'Locked'; // Col I
                 let voters = allVotes[id] || [];
                 let iVoted = voters.includes(currentUser.name);
+                let btnClass = isLocked ? 'btn-secondary disabled' : (iVoted ? 'btn-outline-warning' : 'btn-cyber');
+                let btnText = isLocked ? '<i class="fa-solid fa-lock"></i> Locked' : (iVoted ? '<i class="fa-solid fa-pen-to-square"></i> แก้ไข' : 'ให้คะแนน');
+                
                 let votedHtml = voters.length > 0 ? `<div class="mt-1">` + voters.map(v => `<span class="voter-tag ${v===currentUser.name?'me':''}">${v===currentUser.name?'You':v}</span>`).join('') + `</div>` : '';
+                
                 cont.innerHTML += `
-                <div class="tech-panel card-player ${active?'active':''} ${iVoted?'voted-by-me':''}" data-id="${id}">
+                <div class="tech-panel card-player ${active?'active':''} ${iVoted?'voted-by-me':''} ${isLocked?'locked':''}" data-id="${id}">
                     <div class="d-flex align-items-center">
                         <div class="drag-handle me-2 ${isEditMode?'':'d-none'}" style="cursor:move;color:var(--primary)">☰</div>
                         <div class="seq-num">${idx+1}</div> 
@@ -274,7 +269,7 @@
                             <span class="level-badge">${LEVEL_LABELS[r[7]]||r[7]}</span> <small class="text-info">${r[4]}</small>
                             ${votedHtml}
                         </div>
-                        <button class="btn btn-sm ${iVoted?'btn-outline-secondary':'btn-cyber'} ms-2" onclick="openScore('${id}','${r[1]}')">${iVoted?'EDIT':'VOTE'}</button>
+                        <button class="btn btn-sm ${btnClass} ms-2" onclick="openScore('${id}','${r[1]}', ${isLocked})">${btnText}</button>
                     </div>
                 </div>`;
             });
@@ -282,98 +277,54 @@
             sortableInstance = new Sortable(cont, { handle: '.drag-handle', disabled: !isEditMode, onEnd: saveOrder });
         }
 
-        // --- NEW: Monitor & Print Section ---
-        function showMonitor() {
-            document.querySelectorAll('section').forEach(s=>s.style.display='none');
-            document.getElementById('view-monitor').style.display='block';
-            renderMonitor();
-        }
-
+        // --- Monitor Section ---
+        function showMonitor() { document.querySelectorAll('section').forEach(s=>s.style.display='none'); document.getElementById('view-monitor').style.display='block'; renderMonitor(); }
         function renderMonitor() {
             const cont = document.getElementById('monitor-content'); cont.innerHTML='';
-            // Group data by Cat + Level
             let groups = {};
             allData.forEach(r => {
-                let key = r[3] + '|' + r[7]; // Cat|Level
-                if(!groups[key]) groups[key] = { cat: r[3], lv: r[7], total: 0, scored: 0 };
+                let key = r[3] + '|' + r[7];
+                if(!groups[key]) groups[key] = { cat: r[3], lv: r[7], total: 0, scored: 0, locked: false };
                 groups[key].total++;
-                // Check if this person has at least 1 vote (or more logic if needed)
                 if(allVotes[r[0]] && allVotes[r[0]].length > 0) groups[key].scored++;
+                if(r[8] === 'Locked') groups[key].locked = true;
             });
-
             if(Object.keys(groups).length === 0) { cont.innerHTML='<div class="text-center text-muted">No Data</div>'; return; }
 
-            // Render Table
-            let html = `<table class="table table-dark table-sm" style="font-size:0.8rem"><thead><tr class="text-muted"><th>GROUP</th><th>PROGRESS</th><th class="text-end">ACTION</th></tr></thead><tbody>`;
-            
+            let html = `<table class="table table-dark table-sm" style="font-size:0.8rem"><thead><tr class="text-muted"><th>GROUP</th><th>STATUS</th><th class="text-end">ACTION</th></tr></thead><tbody>`;
             Object.values(groups).forEach(g => {
                 let catName = CATS[g.cat]?.label || g.cat;
                 let lvName = LEVEL_LABELS[g.lv] || g.lv;
-                let isComplete = g.scored >= g.total && g.total > 0;
-                let statusBadge = isComplete ? `<span class="status-pill status-done">DONE</span>` : `<span class="status-pill status-wait">WAIT</span>`;
                 let percent = g.total>0 ? Math.round((g.scored/g.total)*100) : 0;
-
+                let statusBadge = g.locked ? `<span class="status-pill status-locked"><i class="fa-solid fa-lock"></i> CLOSED</span>` : (g.scored >= g.total && g.total>0 ? `<span class="status-pill status-done">DONE</span>` : `<span class="status-pill status-wait">WAIT</span>`);
+                
                 html += `
                 <tr class="monitor-row">
-                    <td>
-                        <div class="fw-bold text-info">${catName}</div>
-                        <div class="small text-muted">${lvName}</div>
-                    </td>
+                    <td><div class="fw-bold text-info">${catName}</div><div class="small text-muted">${lvName}</div></td>
                     <td style="vertical-align:middle">
                         <div class="d-flex align-items-center">
-                            <div class="progress flex-grow-1" style="height:5px; background:#333;">
-                                <div class="progress-bar bg-success" style="width:${percent}%"></div>
-                            </div>
+                            <div class="progress flex-grow-1" style="height:5px; background:#333;"><div class="progress-bar ${g.locked?'bg-danger':'bg-success'}" style="width:${percent}%"></div></div>
                             <span class="ms-2 small">${g.scored}/${g.total}</span>
                         </div>
                         <div class="mt-1">${statusBadge}</div>
                     </td>
                     <td class="text-end" style="vertical-align:middle">
+                        ${!g.locked ? `<button class="btn btn-sm btn-outline-danger me-1" onclick="lockGroup('${g.cat}','${g.lv}')"><i class="fa-solid fa-lock"></i></button>` : ''}
                         <button class="btn btn-sm btn-outline-light" onclick="printGroupReport('${g.cat}', '${g.lv}')"><i class="fa-solid fa-print"></i></button>
                     </td>
                 </tr>`;
             });
-            html += `</tbody></table>`;
-            cont.innerHTML = html;
+            cont.innerHTML = html + `</tbody></table>`;
         }
 
-        function printGroupReport(cat, lv) {
-            let list = allData.filter(r => r[3] === cat && r[7] === lv);
-            list.sort((a,b) => (b[6]||0) - (a[6]||0)); // Sort by Score
-            let catName = CATS[cat]?.label || cat;
-            let lvName = LEVEL_LABELS[lv] || lv;
-
-            let html = `<div style="font-family:Sarabun; color:black; padding:20px;">
-                <h3 style="text-align:center; margin-bottom:5px;">สรุปผลคะแนน SADAO MED-TECH 2026</h3>
-                <h4 style="text-align:center; margin-top:0;">ประเภท: ${catName} (${lvName})</h4>
-                <p style="text-align:right; font-size:12px;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>
-                <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:14px;">
-                    <thead><tr style="background:#eee; border-bottom:2px solid #000;">
-                        <th style="border:1px solid #ccc; padding:8px; width:50px;">อันดับ</th>
-                        <th style="border:1px solid #ccc; padding:8px;">ชื่อเรื่อง</th>
-                        <th style="border:1px solid #ccc; padding:8px;">ผู้ประกวด</th>
-                        <th style="border:1px solid #ccc; padding:8px;">สังกัด</th>
-                        <th style="border:1px solid #ccc; padding:8px; text-align:right; width:80px;">คะแนนเฉลี่ย</th>
-                    </tr></thead>
-                    <tbody>`;
-            
-            list.forEach((r, idx) => {
-                html += `<tr>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:center;">${idx+1}</td>
-                    <td style="border:1px solid #ccc; padding:8px;">${r[1]}</td>
-                    <td style="border:1px solid #ccc; padding:8px;">${r[2]}</td>
-                    <td style="border:1px solid #ccc; padding:8px;">${r[4]}</td>
-                    <td style="border:1px solid #ccc; padding:8px; text-align:right; font-weight:bold;">${Number(r[6]).toFixed(2)}</td>
-                </tr>`;
-            });
-            html += `</tbody></table><div style="margin-top:30px; text-align:center; font-size:12px;">(ลงชื่อ)....................................................... ผู้รับรอง</div></div>`;
-
-            let win = window.open('', '_blank');
-            win.document.write(`<html><head><title>Print Report</title></head><body>${html}</body></html>`);
-            win.document.close(); win.focus(); setTimeout(() => { win.print(); win.close(); }, 500);
+        async function lockGroup(cat, lv) {
+            const {isConfirmed} = await Swal.fire({ title: 'ยืนยันปิดโหวต?', text: "กรรมการจะไม่สามารถแก้ไขคะแนนกลุ่มนี้ได้อีก", icon: 'warning', showCancelButton: true, confirmButtonText: 'ปิดโหวตเดี๋ยวนี้', confirmButtonColor: '#d33' });
+            if(isConfirmed) {
+                showLoader("LOCKING...");
+                fetch(`${API_URL}?action=lockGroup&cat=${cat}&level=${lv}&status=Locked`).then(()=>{ hideLoader(); Swal.fire('Locked','ปิดโหวตเรียบร้อย','success'); fetchData(true); });
+            }
         }
 
-        // --- Functions: Add / Vote / Etc ---
         async function addNewContestant() {
             let catOpts = ''; Object.keys(CATS).forEach(k => catOpts += `<option value="${k}">${CATS[k].label}</option>`);
             let lvOpts = ''; LEVELS.forEach(l => lvOpts += `<option value="${l}">${LEVEL_LABELS[l]}</option>`);
@@ -382,10 +333,7 @@
                 html: `<input id="new-title" class="input-cyber" placeholder="ชื่อเรื่อง"><input id="new-contestant" class="input-cyber" placeholder="ชื่อผู้ประกวด"><input id="new-org" class="input-cyber" placeholder="สังกัด"><label class="d-block text-start small text-info">ประเภท</label><select id="new-cat" class="input-cyber">${catOpts}</select><label class="d-block text-start small text-info">ระดับ</label><select id="new-lv" class="input-cyber">${lvOpts}</select>`,
                 preConfirm: () => ({ title: document.getElementById('new-title').value, contestant: document.getElementById('new-contestant').value, org: document.getElementById('new-org').value, cat: document.getElementById('new-cat').value, level: document.getElementById('new-lv').value })
             });
-            if (form && form.title) {
-                showLoader("SAVING...");
-                fetch(`${API_URL}?action=addContestant&title=${form.title}&contestant=${form.contestant}&org=${form.org}&category=${form.cat}&level=${form.level}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); });
-            }
+            if (form && form.title) { showLoader("SAVING..."); fetch(`${API_URL}?action=addContestant&title=${form.title}&contestant=${form.contestant}&org=${form.org}&category=${form.cat}&level=${form.level}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); }); }
         }
 
         async function addJudge() {
@@ -393,7 +341,8 @@
             if(form && form.u) { showLoader("ADDING..."); fetch(`${API_URL}?action=addJudge&u=${form.u}&p=${form.p}&name=${form.name}&cats=${form.cats}`).then(()=>{ hideLoader(); Swal.fire('Success'); }); }
         }
 
-        async function openScore(id, title) {
+        async function openScore(id, title, isLocked) {
+            if(isLocked) return Swal.fire({icon:'error',title:'LOCKED',text:'ปิดโหวตแล้ว ไม่สามารถแก้ไขได้',background:'#0a1423',color:'#fff'});
             let list = CRITERIA[currentCat] || CRITERIA['Default'];
             let html = `<div id="sc-box">`;
             list.forEach((c,i)=> html+=`<div class="d-flex justify-content-between mb-2 align-items-center"><span class="small text-info text-start">${c.n} (${c.m})</span><input type="number" id="s${i}" class="input-cyber text-center" style="width:60px" min="0" max="${c.m}" oninput="if(value>${c.m})value=${c.m};calc()"></div>`);
@@ -401,7 +350,11 @@
             const {isConfirmed} = await Swal.fire({ title: title, html: html, background:'#0a1423', color:'#fff', showCancelButton:true, confirmButtonText:'SUBMIT', confirmButtonColor:'#00f2ff', didOpen: calc });
             if(isConfirmed) {
                 let total=0, det=""; list.forEach((c,i)=>{ let v=Number(document.getElementById(`s${i}`).value)||0; total+=v; det+=`[${c.n}:${v}]`; });
-                showLoader("SENDING..."); fetch(`${API_URL}?action=submitScore&id=${id}&judge=${currentUser.name}&score=${total}&detail=${det}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); });
+                showLoader("SENDING..."); fetch(`${API_URL}?action=submitScore&id=${id}&judge=${currentUser.name}&score=${total}&detail=${det}`).then(res=>res.text()).then(txt=>{ 
+                    hideLoader(); 
+                    if(txt.includes("LOCKED")) Swal.fire('Failed','ระบบถูกปิดโหวตแล้ว','error');
+                    else { Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); }
+                });
             }
         }
         window.calc = function() { let s=0; document.querySelectorAll('#sc-box input').forEach(i=>s+=Number(i.value)||0); document.getElementById('sum').innerText=s; }
@@ -414,8 +367,15 @@
         }
         function toggleEditMode() { isEditMode=!isEditMode; renderList(); }
         function saveOrder() { const ids = Array.from(document.querySelectorAll('.card-player')).map(e=>e.getAttribute('data-id')); fetch(`${API_URL}?action=updateOrder&ids=${ids.join(',')}`); }
-        function printReport() {
-            /* Legacy Print */
+        
+        function printGroupReport(cat, lv) {
+            let list = allData.filter(r => r[3] === cat && r[7] === lv);
+            list.sort((a,b) => (b[6]||0) - (a[6]||0));
+            let catName = CATS[cat]?.label || cat; let lvName = LEVEL_LABELS[lv] || lv;
+            let html = `<div style="font-family:Sarabun; color:black; padding:20px;"><h3 style="text-align:center; margin-bottom:5px;">สรุปผลคะแนน SADAO MED-TECH 2026</h3><h4 style="text-align:center; margin-top:0;">ประเภท: ${catName} (${lvName})</h4><p style="text-align:right; font-size:12px;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p><table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:14px;"><thead><tr style="background:#eee; border-bottom:2px solid #000;"><th style="border:1px solid #ccc; padding:8px; width:50px;">อันดับ</th><th style="border:1px solid #ccc; padding:8px;">ชื่อเรื่อง</th><th style="border:1px solid #ccc; padding:8px;">ผู้ประกวด</th><th style="border:1px solid #ccc; padding:8px;">สังกัด</th><th style="border:1px solid #ccc; padding:8px; text-align:right; width:80px;">คะแนนเฉลี่ย</th></tr></thead><tbody>`;
+            list.forEach((r, idx) => { html += `<tr><td style="border:1px solid #ccc; padding:8px; text-align:center;">${idx+1}</td><td style="border:1px solid #ccc; padding:8px;">${r[1]}</td><td style="border:1px solid #ccc; padding:8px;">${r[2]}</td><td style="border:1px solid #ccc; padding:8px;">${r[4]}</td><td style="border:1px solid #ccc; padding:8px; text-align:right; font-weight:bold;">${Number(r[6]).toFixed(2)}</td></tr>`; });
+            html += `</tbody></table><div style="margin-top:30px; text-align:center; font-size:12px;">(ลงชื่อ)....................................................... ผู้รับรอง</div></div>`;
+            let win = window.open('', '_blank'); win.document.write(`<html><head><title>Print Report</title></head><body>${html}</body></html>`); win.document.close(); win.focus(); setTimeout(() => { win.print(); win.close(); }, 500);
         }
     </script>
 </body>

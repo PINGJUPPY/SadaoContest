@@ -20,25 +20,19 @@
             font-family: 'Chakra Petch', sans-serif;
             background-color: var(--bg-dark);
             background-image: radial-gradient(circle at 50% 10%, #1a2a44 0%, var(--bg-dark) 70%);
-            color: #e0e0e0; min-height: 100vh; padding-bottom: 60px; /* เว้นที่ให้ Credit */
+            color: #e0e0e0; min-height: 100vh; padding-bottom: 60px;
         }
         
-        /* --- ANIMATIONS (ลูกเล่นโลโก้) --- */
+        /* Animation Logo */
         @keyframes logo-float {
             0% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
             50% { transform: translateY(-10px); filter: drop-shadow(0 0 25px rgba(0, 242, 255, 0.8)); }
             100% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
         }
-        .logo-anim {
-            animation: logo-float 3s ease-in-out infinite; /* ขยับตลอดเวลา */
-            transition: all 0.3s;
-        }
-        .logo-anim:hover {
-            filter: drop-shadow(0 0 40px var(--secondary)); /* เมาส์ชี้แล้วเรืองแสงสีเขียว */
-            transform: scale(1.1);
-        }
+        .logo-anim { animation: logo-float 3s ease-in-out infinite; transition: all 0.3s; }
+        .logo-anim:hover { filter: drop-shadow(0 0 40px var(--secondary)); transform: scale(1.1); }
 
-        /* --- UI STYLES --- */
+        /* UI Styles */
         .tech-panel {
             background: var(--panel-bg); border: 1px solid rgba(0,242,255,0.2);
             border-radius: 15px; position: relative; backdrop-filter: blur(10px);
@@ -63,16 +57,9 @@
         #login-container { height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1000; }
         #app-container { display: none; }
         .logo-img { max-height: 50px; margin-right: 10px; }
+        .dev-credit { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.3); font-family: 'Sarabun'; pointer-events: none; z-index: 0; }
+        .group-title { color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Footer Credit */
-        .dev-credit {
-            position: fixed; bottom: 10px; width: 100%; text-align: center;
-            font-size: 0.75rem; color: rgba(255,255,255,0.3);
-            font-family: 'Sarabun', sans-serif; pointer-events: none;
-            text-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 0;
-        }
-
-        /* Report Print Style */
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -86,7 +73,6 @@
     <div id="login-container">
         <div class="tech-panel p-5 text-center" style="max-width: 400px; width: 90%;">
             <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" class="logo-anim" style="max-width:120px; margin-bottom:20px;">
-            
             <h3 class="neon-text mb-4">ACCESS CONTROL</h3>
             <input id="user" class="form-control bg-dark text-light mb-3" placeholder="กรุณากรอก User">
             <input id="pass" type="password" class="form-control bg-dark text-light mb-3" placeholder="กรุณากรอก Password">
@@ -118,7 +104,7 @@
 
         <section id="view-dashboard" class="container">
             <h4 class="text-center mb-4 fw-light">SELECT <span style="color:var(--secondary)">CATEGORY</span></h4>
-            <div class="row g-3" id="cat-grid"></div>
+            <div id="dashboard-content"></div>
         </section>
 
         <section id="view-list" class="container" style="display:none;">
@@ -171,19 +157,31 @@
             'Photo_Community': { label: 'Photo: ในชุมชน', group: 'Photo' },
             'ShortFilm': { label: 'หนังสั้น', group: 'Film' }
         };
-
         const LEVELS = ['Hospital', 'HPH', 'DHO']; 
         const LEVEL_LABELS = {'Hospital':'โรงพยาบาล', 'HPH':'รพ.สต.', 'DHO':'สสอ.'};
+        
+        // อัปเดตเกณฑ์คะแนนตามคำขอ (15/15/15/15/5/10/5/20)
         const CRITERIA = {
-            'Oral_Research': [ {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์/วิธี', m:15}, {n:'เครื่องมือ/วิเคราะห์', m:15}, {n:'ผล/อภิปราย/สรุป', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}, {n:'เนื้อหาครบถ้วน(80)', m:20} ],
-            'Oral_CQI_Clinic': [{n:'เนื้อหา/บทคัดย่อ', m:80}, {n:'นำเสนอ/บุคลิก', m:5}, {n:'ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}],
-            'Oral_CQI_NonClinic': [{n:'เนื้อหา/บทคัดย่อ', m:80}, {n:'นำเสนอ/บุคลิก', m:5}, {n:'ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}],
-            'Poster_Research': [{n:'เนื้อหา', m:50}, {n:'บุคลิกภาพ', m:15}, {n:'องค์ประกอบ', m:20}, {n:'ประโยชน์', m:15}], 
-            'Poster_R2R': [{n:'เนื้อหา', m:50}, {n:'บุคลิกภาพ', m:15}, {n:'องค์ประกอบ', m:20}, {n:'ประโยชน์', m:15}],
-            'Poster_Innovation': [{n:'เนื้อหา', m:50}, {n:'บุคลิกภาพ', m:10}, {n:'องค์ประกอบ', m:15}, {n:'ประโยชน์', m:15}, {n:'ตอบคำถาม', m:10}],
-            'Photo_Service': [{n:'ชื่อภาพ/เนื้อหา', m:30}, {n:'เทคนิคภาพ', m:50}, {n:'นำเสนอ/ตอบคำถาม', m:20}],
-            'Photo_Community': [{n:'ชื่อภาพ/เนื้อหา', m:30}, {n:'เทคนิคภาพ', m:50}, {n:'นำเสนอ/ตอบคำถาม', m:20}],
-            'ShortFilm': [{n:'เนื้อหา', m:40}, {n:'นำเสนอ', m:20}, {n:'ผลที่ได้', m:20}, {n:'เทคนิค', m:20}],
+            'Oral_Research': [ 
+                {n:'ชื่อเรื่อง/ที่มา', m:15}, 
+                {n:'วัตถุประสงค์', m:15}, 
+                {n:'ระเบียบวิธีวิจัย', m:15}, 
+                {n:'ผล/วิเคราะห์ข้อมูล', m:15}, 
+                {n:'บุคลิกภาพ', m:5}, 
+                {n:'การใช้ประโยชน์', m:10}, 
+                {n:'ตอบคำถาม', m:5}, 
+                {n:'เอกสารฉบับสมบูรณ์', m:20} 
+            ],
+            // ประเภทอื่นๆ ใช้ค่าเดิม หรือปรับตามต้องการ
+            'Oral_R2R': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
+            'Oral_CQI_Clinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
+            'Oral_CQI_NonClinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
+            'Poster_Research': [{n:'เนื้อหา', m:50}, {n:'นำเสนอ', m:50}], 
+            'Poster_R2R': [{n:'เนื้อหา', m:50}, {n:'นำเสนอ', m:50}],
+            'Poster_Innovation': [{n:'เนื้อหา', m:50}, {n:'นำเสนอ', m:50}],
+            'Photo_Service': [{n:'ภาพ/เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
+            'Photo_Community': [{n:'ภาพ/เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
+            'ShortFilm': [{n:'เนื้อหา/เทคนิค', m:80}, {n:'นำเสนอ', m:20}],
             'Default': [{n:'คะแนนรวม', m:100}]
         };
 
@@ -215,14 +213,42 @@
             setupDashboard(); updateRank();
         }
 
+        // --- จัดกลุ่ม Dashboard ---
         function setupDashboard() {
-            const grid = document.getElementById('cat-grid'); grid.innerHTML = '';
-            Object.keys(CATS).forEach(key => {
-                if(currentUser.role==='Admin' || currentUser.categories.includes(CATS[key].group)) {
-                    grid.innerHTML += `<div class="col-6 col-md-4"><div class="tech-panel cat-card" onclick="openCat('${key}')"><h6 class="text-info">${CATS[key].group}</h6><div class="fw-bold">${CATS[key].label}</div></div></div>`;
+            const container = document.getElementById('dashboard-content');
+            container.innerHTML = '';
+            
+            // กำหนดลำดับกลุ่ม
+            const GROUPS = ['Oral', 'Poster', 'Photo', 'Film'];
+            
+            GROUPS.forEach(groupName => {
+                // กรองเฉพาะหมวดในกลุ่มนี้
+                let catsInGroup = Object.keys(CATS).filter(k => CATS[k].group === groupName);
+                
+                // เช็คสิทธิ์ User ว่าเห็นหมวดไหนบ้างในกลุ่มนี้
+                let visibleCats = catsInGroup.filter(key => 
+                    currentUser.role === 'Admin' || currentUser.categories.includes(CATS[key].group)
+                );
+
+                if(visibleCats.length > 0) {
+                    // สร้าง Header กลุ่ม
+                    let groupHtml = `<h5 class="group-title">${groupName} Presentation</h5>`;
+                    groupHtml += `<div class="row g-3">`;
+                    
+                    visibleCats.forEach(key => {
+                        groupHtml += `
+                        <div class="col-6 col-md-4">
+                            <div class="tech-panel cat-card" onclick="openCat('${key}')">
+                                <div class="fw-bold">${CATS[key].label}</div>
+                            </div>
+                        </div>`;
+                    });
+                    groupHtml += `</div>`;
+                    container.innerHTML += groupHtml;
                 }
             });
         }
+
         function openCat(key) { currentCat=key; document.getElementById('view-dashboard').style.display='none'; document.getElementById('view-list').style.display='block'; document.getElementById('cat-title').innerText=CATS[key].label; renderList(); }
         function goHome() { document.getElementById('view-list').style.display='none'; document.getElementById('view-dashboard').style.display='block'; fetchData(); }
 
@@ -255,12 +281,22 @@
 
         async function openScore(id, title) {
             let criteriaList = CRITERIA[currentCat] || CRITERIA['Default'];
+            
+            // *** เพิ่ม oninput เพื่อล็อคคะแนนห้ามเกิน ***
             let detailHtml = `<div id="detail-area">`;
             criteriaList.forEach((c,i) => {
-                detailHtml += `<div class="mb-2 text-start d-flex justify-content-between"><label class="small text-info">${c.n} (${c.m})</label><input type="number" id="sc_${i}" class="input-cyber" style="width:60px" max="${c.m}" onchange="calcTotal()"></div>`;
+                detailHtml += `
+                <div class="mb-2 text-start d-flex justify-content-between align-items-center">
+                    <label class="small text-info">${c.n} (เต็ม ${c.m})</label>
+                    <input type="number" id="sc_${i}" class="input-cyber" style="width:70px; text-align:center;" 
+                        min="0" max="${c.m}" 
+                        oninput="if(this.value > ${c.m}) this.value = ${c.m}; if(this.value < 0) this.value = 0; calcTotal()"
+                    >
+                </div>`;
             });
             detailHtml += `</div>`;
-            let quickHtml = `<div id="quick-area" style="display:none"><div class="text-center py-3"><label class="text-warning mb-2">กรอกคะแนนรวม (เต็ม 100)</label><input type="number" id="quick_total" class="input-cyber text-center fs-4" max="100"></div></div>`;
+            
+            let quickHtml = `<div id="quick-area" style="display:none"><div class="text-center py-3"><label class="text-warning mb-2">กรอกคะแนนรวม (เต็ม 100)</label><input type="number" id="quick_total" class="input-cyber text-center fs-4" max="100" oninput="if(this.value>100)this.value=100"></div></div>`;
             let toggleBtn = `<div class="text-end mb-2"><span class="score-mode-switch" onclick="toggleScoreMode()">⚡ เปลี่ยนเป็นกรอกคะแนนช่องเดียว</span></div>`;
 
             const { isConfirmed } = await Swal.fire({

@@ -71,7 +71,12 @@
         .seq-num { font-family: 'Orbitron'; font-size: 1.2rem; color: #666; width: 35px; text-align: center; font-weight: bold; }
         .active .seq-num { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
         
-        .voter-tag { display: inline-block; background: #222; padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; color: #aaa; margin-right: 3px; border: 1px solid #444; }
+        /* ปรับขนาดป้ายชื่อกรรมการให้เล็กลง เพื่อรองรับ 4 คน */
+        .voter-tag { 
+            display: inline-block; background: #222; padding: 1px 5px; border-radius: 4px; 
+            font-size: 0.6rem; color: #aaa; margin-right: 3px; margin-bottom: 2px;
+            border: 1px solid #444; max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
+        }
         .voter-tag.me { border-color: var(--primary); color: var(--primary); }
         
         .input-cyber { background: #111; border: 1px solid #444; color: #fff; width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
@@ -183,6 +188,7 @@
         const LEVELS = ['Hospital', 'HPH', 'DHO']; 
         const LEVEL_LABELS = {'Hospital':'โรงพยาบาล', 'HPH':'รพ.สต.', 'DHO':'สสอ.'};
         
+        // เกณฑ์คะแนน (รวม 100)
         const CRITERIA = {
             'Oral_Research': [ {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์', m:15}, {n:'ระเบียบวิธีวิจัย', m:15}, {n:'ผล/วิเคราะห์', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}, {n:'เอกสารฉบับสมบูรณ์', m:20} ],
             'Default': [{n:'คะแนนรวม', m:100}]

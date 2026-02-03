@@ -23,7 +23,6 @@
             color: #e0e0e0; min-height: 100vh; padding-bottom: 60px;
         }
         
-        /* Animation Logo */
         @keyframes logo-float {
             0% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
             50% { transform: translateY(-10px); filter: drop-shadow(0 0 25px rgba(0, 242, 255, 0.8)); }
@@ -32,7 +31,6 @@
         .logo-anim { animation: logo-float 3s ease-in-out infinite; transition: all 0.3s; }
         .logo-anim:hover { filter: drop-shadow(0 0 40px var(--secondary)); transform: scale(1.1); }
 
-        /* UI Styles */
         .tech-panel {
             background: var(--panel-bg); border: 1px solid rgba(0,242,255,0.2);
             border-radius: 15px; position: relative; backdrop-filter: blur(10px);
@@ -48,8 +46,8 @@
         .cat-card { cursor: pointer; transition: 0.2s; padding: 20px; text-align: center; height: 100%; border: 1px solid rgba(255,255,255,0.1); }
         .cat-card:hover { border-color: var(--secondary); background: rgba(0,255,136,0.1); transform: translateY(-3px); }
         
-        .card-player { border-left: 4px solid #555; margin-bottom: 10px; padding: 15px; background: rgba(255,255,255,0.03); transition: all 0.3s ease; }
-        .card-player.active { border-left-color: var(--secondary); background: rgba(0,255,136,0.05); transform: scale(1.01); box-shadow: 0 0 15px rgba(0,255,136,0.1); }
+        .card-player { border-left: 4px solid #555; margin-bottom: 10px; padding: 15px; background: rgba(255,255,255,0.03); }
+        .card-player.active { border-left-color: var(--secondary); background: rgba(0,255,136,0.05); }
         .level-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #aaa; margin-left: 5px; }
         .score-mode-switch { cursor: pointer; color: var(--secondary); text-decoration: underline; font-size: 0.9rem; }
         .input-cyber { background: #111; border: 1px solid #444; color: #fff; width: 100%; padding: 8px; }
@@ -59,6 +57,10 @@
         .logo-img { max-height: 50px; margin-right: 10px; }
         .dev-credit { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 0.75rem; color: rgba(255,255,255,0.3); font-family: 'Sarabun'; pointer-events: none; z-index: 0; }
         .group-title { color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 15px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Update Indicator Animation */
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .live-dot { display: inline-block; width: 8px; height: 8px; background-color: var(--secondary); border-radius: 50%; margin-right: 5px; animation: blink 1s infinite; }
 
         @media print {
             body * { visibility: hidden; }
@@ -88,6 +90,10 @@
                     SADAO MED-TECH
                 </span>
                 <div class="d-flex align-items-center gap-2">
+                    <small class="text-secondary d-none d-md-block me-3" style="font-size: 0.75rem;">
+                        <span class="live-dot"></span>Updated: <span id="last-update-time">--:--:--</span>
+                    </small>
+
                     <small class="text-muted d-none d-md-block me-2" id="user-display">JUDGE</small>
                     <button class="btn btn-sm btn-outline-light" onclick="printReport()" title="พิมพ์รายงาน"><i class="fa-solid fa-print"></i></button>
                     <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="doLogout()"><i class="fa-solid fa-power-off"></i></button>
@@ -143,7 +149,6 @@
 
     <script>
         // 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
-        // ใส่ Web App URL ของคุณตรงนี้
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
         // 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
 
@@ -162,13 +167,8 @@
         const LEVELS = ['Hospital', 'HPH', 'DHO']; 
         const LEVEL_LABELS = {'Hospital':'โรงพยาบาล', 'HPH':'รพ.สต.', 'DHO':'สสอ.'};
         
-        // เกณฑ์คะแนน
         const CRITERIA = {
-            'Oral_Research': [ 
-                {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์', m:15}, {n:'ระเบียบวิธีวิจัย', m:15}, 
-                {n:'ผล/วิเคราะห์ข้อมูล', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, 
-                {n:'ตอบคำถาม', m:5}, {n:'เอกสารฉบับสมบูรณ์', m:20} 
-            ],
+            'Oral_Research': [ {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์', m:15}, {n:'ระเบียบวิธีวิจัย', m:15}, {n:'ผล/วิเคราะห์ข้อมูล', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}, {n:'เอกสารฉบับสมบูรณ์', m:20} ],
             'Oral_R2R': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
             'Oral_CQI_Clinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
             'Oral_CQI_NonClinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
@@ -206,14 +206,9 @@
             document.getElementById('user-display').innerText = currentUser.name;
             if(currentUser.role==='Admin') document.getElementById('admin-toolbar').classList.remove('d-none');
             
-            // โหลดครั้งแรก
             fetchData();
-            
-            // 🟢 Real-time Auto Sync ทุก 5 วินาที
             if(syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(() => {
-                if(!isEditMode) fetchData(true);
-            }, 5000);
+            syncInterval = setInterval(() => { if(!isEditMode) fetchData(true); }, 5000);
         }
 
         async function fetchData(isAuto = false) {
@@ -222,23 +217,27 @@
                 const res = await fetch(`${API_URL}?action=getData`); 
                 allData = await res.json();
                 
-                // อัปเดตหน้าจอ
                 setupDashboard();
                 updateRank();
                 if(document.getElementById('view-list').style.display === 'block') {
                     renderList();
                 }
+
+                // 🟢 Update Time String
+                let now = new Date();
+                let timeStr = now.getHours().toString().padStart(2,'0') + ":" + 
+                              now.getMinutes().toString().padStart(2,'0') + ":" + 
+                              now.getSeconds().toString().padStart(2,'0');
+                document.getElementById('last-update-time').innerText = timeStr;
+
                 if(!isAuto) Swal.close();
-            } catch(e) {
-                console.log("Sync failed");
-            }
+            } catch(e) { console.log("Sync failed"); }
         }
 
         function setupDashboard() {
             const container = document.getElementById('dashboard-content');
             container.innerHTML = '';
             const GROUPS = ['Oral', 'Poster', 'Photo', 'Film'];
-            
             GROUPS.forEach(groupName => {
                 let catsInGroup = Object.keys(CATS).filter(k => CATS[k].group === groupName);
                 let visibleCats = catsInGroup.filter(key => currentUser.role === 'Admin' || currentUser.categories.includes(CATS[key].group));

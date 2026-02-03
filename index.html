@@ -19,47 +19,16 @@
             font-family: 'Chakra Petch', sans-serif; 
             background-color: var(--bg-dark); 
             color: #e0e0e0; min-height: 100vh; padding-bottom: 60px; 
-            background-image: 
-                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
         }
         
-        /* --- SCI-FI LOADER --- */
-        #sci-fi-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 10, 16, 0.95); z-index: 9999;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            backdrop-filter: blur(15px);
-        }
-        .spinner-ring {
-            width: 100px; height: 100px; border: 3px solid transparent;
-            border-top: 3px solid var(--primary); border-right: 3px solid var(--secondary);
-            border-radius: 50%; animation: spin 1s linear infinite;
-            box-shadow: 0 0 15px var(--primary); margin-bottom: 20px;
-        }
-        .spinner-core {
-            width: 60px; height: 60px; background: rgba(0, 242, 255, 0.1);
-            border-radius: 50%; position: absolute; animation: pulse 1.5s ease-in-out infinite;
-        }
-        .loading-text { font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px; margin-top: 10px; }
-        
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
-
-        /* --- UI Styles --- */
-        .logo-anim { animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%,100% { transform: translateY(0); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: translateY(-5px); filter: drop-shadow(0 0 20px var(--secondary)); } }
-
+        /* UI Components */
         .tech-panel { background: var(--panel-bg); border: 1px solid rgba(0,242,255,0.3); border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.7); }
         .neon-text { color: var(--primary); text-shadow: 0 0 10px rgba(0,242,255,0.6); font-family: 'Orbitron'; }
         
         .btn-cyber { background: rgba(0,242,255,0.1); border: 1px solid var(--primary); color: var(--primary); transition: 0.3s; text-transform: uppercase; }
         .btn-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
-        
-        /* Custom SweetAlert Theme (Dark) */
-        div:where(.swal2-container) div:where(.swal2-popup) { background: #0a1423 !important; border: 1px solid var(--primary); color: #fff; }
-        .swal2-title { color: var(--primary) !important; font-family: 'Orbitron' !important; }
         
         .cat-card { cursor: pointer; transition: 0.2s; padding: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); }
         .cat-card:hover { border-color: var(--secondary); background: rgba(0,255,136,0.1); transform: translateY(-5px); box-shadow: 0 0 15px rgba(0,255,136,0.2); }
@@ -71,12 +40,7 @@
         .seq-num { font-family: 'Orbitron'; font-size: 1.2rem; color: #666; width: 35px; text-align: center; font-weight: bold; }
         .active .seq-num { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); }
         
-        /* ปรับขนาดป้ายชื่อกรรมการให้เล็กลง เพื่อรองรับ 4 คน */
-        .voter-tag { 
-            display: inline-block; background: #222; padding: 1px 5px; border-radius: 4px; 
-            font-size: 0.6rem; color: #aaa; margin-right: 3px; margin-bottom: 2px;
-            border: 1px solid #444; max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
-        }
+        .voter-tag { display: inline-block; background: #222; padding: 1px 5px; border-radius: 4px; font-size: 0.6rem; color: #aaa; margin-right: 3px; margin-bottom: 2px; border: 1px solid #444; max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
         .voter-tag.me { border-color: var(--primary); color: var(--primary); }
         
         .input-cyber { background: #111; border: 1px solid #444; color: #fff; width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
@@ -84,20 +48,33 @@
         
         .group-title { color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin: 20px 0 10px 0; font-family: 'Orbitron'; letter-spacing: 1px; }
 
-        #login-container { height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1000; position: relative; }
+        /* Loader */
+        #sci-fi-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 10, 16, 0.95); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(15px); }
+        .spinner-ring { width: 100px; height: 100px; border: 3px solid transparent; border-top: 3px solid var(--primary); border-right: 3px solid var(--secondary); border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 15px var(--primary); margin-bottom: 20px; }
+        .loading-text { font-family: 'Orbitron'; color: var(--primary); letter-spacing: 2px; margin-top: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Monitor Table */
+        .monitor-row { border-bottom: 1px solid #222; padding: 10px 0; }
+        .status-pill { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
+        .status-done { background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00ff88; }
+        .status-wait { background: rgba(255,255,0,0.1); color: #ffc107; border: 1px solid #ffc107; }
+
+        #login-container { height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1000; }
         #app-container { display: none; }
         .dev-credit { position: fixed; bottom: 5px; width: 100%; text-align: center; font-size: 0.7rem; color: rgba(255,255,255,0.2); pointer-events: none; }
-        
+        .logo-anim { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); filter: drop-shadow(0 0 10px var(--primary)); } 50% { transform: translateY(-5px); filter: drop-shadow(0 0 20px var(--secondary)); } }
+
         @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; color: black; padding: 20px; } }
     </style>
 </head>
 <body>
 
     <div id="sci-fi-loader">
-        <div class="spinner-core"></div>
         <div class="spinner-ring"></div>
-        <h4 class="loading-text">INITIALIZING SYSTEM...</h4>
-        <small class="text-muted" style="font-family: 'Chakra Petch';">Connecting to Database</small>
+        <h4 class="loading-text">INITIALIZING...</h4>
+        <small class="text-muted" style="font-family:'Chakra Petch'">Connecting to Database</small>
     </div>
 
     <div id="login-container">
@@ -120,7 +97,6 @@
                 <div class="d-flex align-items-center gap-2">
                     <small class="text-secondary d-none d-md-block me-2" style="font-size:0.7rem;">Sync: <span id="update-time">--:--</span></small>
                     <small class="text-info d-none d-md-block me-2" id="user-display"></small>
-                    <button class="btn btn-sm btn-outline-light" onclick="printReport()"><i class="fa-solid fa-print"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="doLogout()"><i class="fa-solid fa-power-off"></i></button>
                 </div>
             </div>
@@ -131,6 +107,7 @@
                 <button class="btn btn-sm btn-outline-info" onclick="addNewContestant()"><i class="fa-solid fa-plus"></i> ลงทะเบียน</button>
                 <button class="btn btn-sm btn-outline-success" onclick="addJudge()"><i class="fa-solid fa-user-plus"></i> เพิ่มกรรมการ</button>
                 <button class="btn btn-sm btn-outline-warning" onclick="toggleEditMode()"><i class="fa-solid fa-sort"></i> จัดคิว</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="showMonitor()"><i class="fa-solid fa-desktop"></i> ติดตามผล & ปริ้นท์</button>
             </div>
         </div>
 
@@ -145,6 +122,17 @@
                 <div style="width:30px"></div>
             </div>
             <div id="contestant-container"></div>
+        </section>
+
+        <section id="view-monitor" class="container" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-sm btn-outline-light" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                <h5 class="neon-text m-0">MONITOR & PRINT</h5>
+                <div style="width:30px"></div>
+            </div>
+            <div class="tech-panel p-3">
+                <div id="monitor-content"></div>
+            </div>
         </section>
 
         <section id="view-rank" class="container mt-4 mb-5">
@@ -170,7 +158,7 @@
     <div id="print-area" style="display:none;"></div>
 
     <script>
-        // 🔴🔴 URL ของคุณ 🔴🔴
+        // 🔴🔴 URL 🔴🔴
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
 
         const CATS = {
@@ -188,7 +176,6 @@
         const LEVELS = ['Hospital', 'HPH', 'DHO']; 
         const LEVEL_LABELS = {'Hospital':'โรงพยาบาล', 'HPH':'รพ.สต.', 'DHO':'สสอ.'};
         
-        // เกณฑ์คะแนน (รวม 100)
         const CRITERIA = {
             'Oral_Research': [ {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์', m:15}, {n:'ระเบียบวิธีวิจัย', m:15}, {n:'ผล/วิเคราะห์', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, {n:'ตอบคำถาม', m:5}, {n:'เอกสารฉบับสมบูรณ์', m:20} ],
             'Default': [{n:'คะแนนรวม', m:100}]
@@ -196,14 +183,9 @@
 
         let currentUser = null, allData = [], allVotes = {}, currentCat = '', isEditMode = false, syncInterval = null, wakeLock = null;
 
-        // --- Helper: Loader ---
-        function showLoader(msg) {
-            document.querySelector('.loading-text').innerText = msg || "PROCESSING...";
-            document.getElementById('sci-fi-loader').style.display = 'flex';
-        }
-        function hideLoader() {
-            document.getElementById('sci-fi-loader').style.display = 'none';
-        }
+        // Loader
+        function showLoader(msg) { document.querySelector('.loading-text').innerText = msg||"PROCESSING..."; document.getElementById('sci-fi-loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('sci-fi-loader').style.display = 'none'; }
 
         window.onload = () => {
             const saved = localStorage.getItem('sadao_user_v3');
@@ -219,11 +201,8 @@
             const p = document.getElementById('pass').value;
             showLoader("AUTHENTICATING...");
             fetch(`${API_URL}?action=login&u=${u}&p=${p}`).then(res=>res.json()).then(data=>{
-                if(data.status==='success'){ 
-                    currentUser=data.user; 
-                    localStorage.setItem('sadao_user_v3',JSON.stringify(currentUser)); 
-                    setTimeout(() => { bootSystem(); hideLoader(); }, 1000); // Fake delay for cool effect
-                } else { hideLoader(); Swal.fire('Access Denied','Login Failed','error'); }
+                if(data.status==='success'){ currentUser=data.user; localStorage.setItem('sadao_user_v3',JSON.stringify(currentUser)); setTimeout(() => { bootSystem(); hideLoader(); }, 1000); } 
+                else { hideLoader(); Swal.fire('Access Denied','Login Failed','error'); }
             }).catch(()=>hideLoader());
         }
         function doLogout() { localStorage.removeItem('sadao_user_v3'); location.reload(); }
@@ -233,7 +212,6 @@
             document.getElementById('app-container').style.display='block';
             document.getElementById('user-display').innerText = currentUser.name;
             if(currentUser.role==='Admin') document.getElementById('admin-toolbar').classList.remove('d-none');
-            
             requestWakeLock();
             fetchData();
             if(syncInterval) clearInterval(syncInterval);
@@ -251,6 +229,7 @@
                 setupDashboard();
                 updateRank();
                 if(document.getElementById('view-list').style.display==='block') renderList();
+                if(document.getElementById('view-monitor').style.display==='block') renderMonitor(); // Auto update monitor
                 
                 let now = new Date();
                 document.getElementById('update-time').innerText = now.toTimeString().split(' ')[0];
@@ -271,26 +250,18 @@
                 }
             });
         }
-        function openCat(k) { currentCat=k; document.getElementById('view-dashboard').style.display='none'; document.getElementById('view-list').style.display='block'; document.getElementById('cat-title').innerText=CATS[k].label; renderList(); }
-        function goHome() { document.getElementById('view-list').style.display='none'; document.getElementById('view-dashboard').style.display='block'; fetchData(); }
+        function openCat(k) { currentCat=k; document.querySelectorAll('section').forEach(s=>s.style.display='none'); document.getElementById('view-list').style.display='block'; document.getElementById('view-rank').style.display='block'; document.getElementById('cat-title').innerText=CATS[k].label; renderList(); }
+        function goHome() { document.querySelectorAll('section').forEach(s=>s.style.display='none'); document.getElementById('view-dashboard').style.display='block'; document.getElementById('view-rank').style.display='block'; fetchData(); }
 
         function renderList() {
             const cont = document.getElementById('contestant-container'); cont.innerHTML='';
             let list = allData.filter(r => r[3] === currentCat);
             if(list.length===0) { cont.innerHTML='<div class="text-center text-muted py-5">NO DATA</div>'; return; }
-            
             list.forEach((r, idx) => {
                 let id = r[0], active = r[5] === 'Active';
                 let voters = allVotes[id] || [];
                 let iVoted = voters.includes(currentUser.name);
-                
-                let votedHtml = '';
-                if(voters.length > 0) {
-                    votedHtml = `<div class="mt-1">`;
-                    voters.forEach(v => { votedHtml += `<span class="voter-tag ${v===currentUser.name?'me':''}">${v===currentUser.name?'You':v}</span>`; });
-                    votedHtml += `</div>`;
-                }
-
+                let votedHtml = voters.length > 0 ? `<div class="mt-1">` + voters.map(v => `<span class="voter-tag ${v===currentUser.name?'me':''}">${v===currentUser.name?'You':v}</span>`).join('') + `</div>` : '';
                 cont.innerHTML += `
                 <div class="tech-panel card-player ${active?'active':''} ${iVoted?'voted-by-me':''}" data-id="${id}">
                     <div class="d-flex align-items-center">
@@ -303,9 +274,7 @@
                             <span class="level-badge">${LEVEL_LABELS[r[7]]||r[7]}</span> <small class="text-info">${r[4]}</small>
                             ${votedHtml}
                         </div>
-                        <button class="btn btn-sm ${iVoted?'btn-outline-secondary':'btn-cyber'} ms-2" onclick="openScore('${id}','${r[1]}')">
-                            ${iVoted?'EDIT':'VOTE'}
-                        </button>
+                        <button class="btn btn-sm ${iVoted?'btn-outline-secondary':'btn-cyber'} ms-2" onclick="openScore('${id}','${r[1]}')">${iVoted?'EDIT':'VOTE'}</button>
                     </div>
                 </div>`;
             });
@@ -313,73 +282,115 @@
             sortableInstance = new Sortable(cont, { handle: '.drag-handle', disabled: !isEditMode, onEnd: saveOrder });
         }
 
-        // --- 🟢 FIX: Add New Contestant Function ---
-        async function addNewContestant() {
-            // Generate Options
-            let catOpts = ''; 
-            Object.keys(CATS).forEach(k => catOpts += `<option value="${k}">${CATS[k].label}</option>`);
-            
-            let lvOpts = ''; 
-            LEVELS.forEach(l => lvOpts += `<option value="${l}">${LEVEL_LABELS[l]}</option>`);
+        // --- NEW: Monitor & Print Section ---
+        function showMonitor() {
+            document.querySelectorAll('section').forEach(s=>s.style.display='none');
+            document.getElementById('view-monitor').style.display='block';
+            renderMonitor();
+        }
 
-            const { value: formValues } = await Swal.fire({
-                title: 'ลงทะเบียนใหม่',
-                background: '#0a1423', color: '#fff',
-                html: `
-                    <input id="new-title" class="input-cyber" placeholder="ชื่อเรื่อง / ผลงาน">
-                    <input id="new-contestant" class="input-cyber" placeholder="ชื่อผู้เข้าประกวด / ทีม">
-                    <input id="new-org" class="input-cyber" placeholder="สังกัด (รพ./รพ.สต.)">
-                    <label class="d-block text-start small text-info mt-2">ประเภท</label>
-                    <select id="new-cat" class="input-cyber">${catOpts}</select>
-                    <label class="d-block text-start small text-info mt-2">ระดับ</label>
-                    <select id="new-lv" class="input-cyber">${lvOpts}</select>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'บันทึกข้อมูล',
-                confirmButtonColor: '#00f2ff',
-                preConfirm: () => {
-                    return {
-                        title: document.getElementById('new-title').value,
-                        contestant: document.getElementById('new-contestant').value,
-                        org: document.getElementById('new-org').value,
-                        cat: document.getElementById('new-cat').value,
-                        level: document.getElementById('new-lv').value
-                    }
-                }
+        function renderMonitor() {
+            const cont = document.getElementById('monitor-content'); cont.innerHTML='';
+            // Group data by Cat + Level
+            let groups = {};
+            allData.forEach(r => {
+                let key = r[3] + '|' + r[7]; // Cat|Level
+                if(!groups[key]) groups[key] = { cat: r[3], lv: r[7], total: 0, scored: 0 };
+                groups[key].total++;
+                // Check if this person has at least 1 vote (or more logic if needed)
+                if(allVotes[r[0]] && allVotes[r[0]].length > 0) groups[key].scored++;
             });
 
-            if (formValues && formValues.title) {
-                showLoader("SAVING DATA...");
-                fetch(`${API_URL}?action=addContestant&title=${formValues.title}&contestant=${formValues.contestant}&org=${formValues.org}&category=${formValues.cat}&level=${formValues.level}`)
-                .then(response => {
-                    hideLoader();
-                    Swal.fire({icon:'success', title:'Success', text:'เพิ่มรายชื่อเรียบร้อยแล้ว', background:'#0a1423', color:'#fff', timer:1500, showConfirmButton:false});
-                    fetchData(true); // Refresh
-                })
-                .catch(err => {
-                    hideLoader();
-                    Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error');
-                });
+            if(Object.keys(groups).length === 0) { cont.innerHTML='<div class="text-center text-muted">No Data</div>'; return; }
+
+            // Render Table
+            let html = `<table class="table table-dark table-sm" style="font-size:0.8rem"><thead><tr class="text-muted"><th>GROUP</th><th>PROGRESS</th><th class="text-end">ACTION</th></tr></thead><tbody>`;
+            
+            Object.values(groups).forEach(g => {
+                let catName = CATS[g.cat]?.label || g.cat;
+                let lvName = LEVEL_LABELS[g.lv] || g.lv;
+                let isComplete = g.scored >= g.total && g.total > 0;
+                let statusBadge = isComplete ? `<span class="status-pill status-done">DONE</span>` : `<span class="status-pill status-wait">WAIT</span>`;
+                let percent = g.total>0 ? Math.round((g.scored/g.total)*100) : 0;
+
+                html += `
+                <tr class="monitor-row">
+                    <td>
+                        <div class="fw-bold text-info">${catName}</div>
+                        <div class="small text-muted">${lvName}</div>
+                    </td>
+                    <td style="vertical-align:middle">
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1" style="height:5px; background:#333;">
+                                <div class="progress-bar bg-success" style="width:${percent}%"></div>
+                            </div>
+                            <span class="ms-2 small">${g.scored}/${g.total}</span>
+                        </div>
+                        <div class="mt-1">${statusBadge}</div>
+                    </td>
+                    <td class="text-end" style="vertical-align:middle">
+                        <button class="btn btn-sm btn-outline-light" onclick="printGroupReport('${g.cat}', '${g.lv}')"><i class="fa-solid fa-print"></i></button>
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            cont.innerHTML = html;
+        }
+
+        function printGroupReport(cat, lv) {
+            let list = allData.filter(r => r[3] === cat && r[7] === lv);
+            list.sort((a,b) => (b[6]||0) - (a[6]||0)); // Sort by Score
+            let catName = CATS[cat]?.label || cat;
+            let lvName = LEVEL_LABELS[lv] || lv;
+
+            let html = `<div style="font-family:Sarabun; color:black; padding:20px;">
+                <h3 style="text-align:center; margin-bottom:5px;">สรุปผลคะแนน SADAO MED-TECH 2026</h3>
+                <h4 style="text-align:center; margin-top:0;">ประเภท: ${catName} (${lvName})</h4>
+                <p style="text-align:right; font-size:12px;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>
+                <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:14px;">
+                    <thead><tr style="background:#eee; border-bottom:2px solid #000;">
+                        <th style="border:1px solid #ccc; padding:8px; width:50px;">อันดับ</th>
+                        <th style="border:1px solid #ccc; padding:8px;">ชื่อเรื่อง</th>
+                        <th style="border:1px solid #ccc; padding:8px;">ผู้ประกวด</th>
+                        <th style="border:1px solid #ccc; padding:8px;">สังกัด</th>
+                        <th style="border:1px solid #ccc; padding:8px; text-align:right; width:80px;">คะแนนเฉลี่ย</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            list.forEach((r, idx) => {
+                html += `<tr>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:center;">${idx+1}</td>
+                    <td style="border:1px solid #ccc; padding:8px;">${r[1]}</td>
+                    <td style="border:1px solid #ccc; padding:8px;">${r[2]}</td>
+                    <td style="border:1px solid #ccc; padding:8px;">${r[4]}</td>
+                    <td style="border:1px solid #ccc; padding:8px; text-align:right; font-weight:bold;">${Number(r[6]).toFixed(2)}</td>
+                </tr>`;
+            });
+            html += `</tbody></table><div style="margin-top:30px; text-align:center; font-size:12px;">(ลงชื่อ)....................................................... ผู้รับรอง</div></div>`;
+
+            let win = window.open('', '_blank');
+            win.document.write(`<html><head><title>Print Report</title></head><body>${html}</body></html>`);
+            win.document.close(); win.focus(); setTimeout(() => { win.print(); win.close(); }, 500);
+        }
+
+        // --- Functions: Add / Vote / Etc ---
+        async function addNewContestant() {
+            let catOpts = ''; Object.keys(CATS).forEach(k => catOpts += `<option value="${k}">${CATS[k].label}</option>`);
+            let lvOpts = ''; LEVELS.forEach(l => lvOpts += `<option value="${l}">${LEVEL_LABELS[l]}</option>`);
+            const { value: form } = await Swal.fire({
+                title: 'ลงทะเบียนใหม่', background: '#0a1423', color: '#fff',
+                html: `<input id="new-title" class="input-cyber" placeholder="ชื่อเรื่อง"><input id="new-contestant" class="input-cyber" placeholder="ชื่อผู้ประกวด"><input id="new-org" class="input-cyber" placeholder="สังกัด"><label class="d-block text-start small text-info">ประเภท</label><select id="new-cat" class="input-cyber">${catOpts}</select><label class="d-block text-start small text-info">ระดับ</label><select id="new-lv" class="input-cyber">${lvOpts}</select>`,
+                preConfirm: () => ({ title: document.getElementById('new-title').value, contestant: document.getElementById('new-contestant').value, org: document.getElementById('new-org').value, cat: document.getElementById('new-cat').value, level: document.getElementById('new-lv').value })
+            });
+            if (form && form.title) {
+                showLoader("SAVING...");
+                fetch(`${API_URL}?action=addContestant&title=${form.title}&contestant=${form.contestant}&org=${form.org}&category=${form.cat}&level=${form.level}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); });
             }
         }
 
         async function addJudge() {
-            const { value: form } = await Swal.fire({
-                title: 'เพิ่มกรรมการใหม่', background:'#0a1423', color:'#fff',
-                html: `
-                    <input id="j-user" class="input-cyber" placeholder="Username">
-                    <input id="j-pass" class="input-cyber" placeholder="Password">
-                    <input id="j-name" class="input-cyber" placeholder="ชื่อ-สกุล กรรมการ">
-                    <div class="text-start small text-muted mb-1">สิทธิ์ (เช่น Oral,Poster)</div>
-                    <input id="j-cats" class="input-cyber" value="Oral,Poster,Photo,Film">
-                `,
-                preConfirm: () => ({ u: document.getElementById('j-user').value, p: document.getElementById('j-pass').value, name: document.getElementById('j-name').value, cats: document.getElementById('j-cats').value })
-            });
-            if(form && form.u) {
-                showLoader("CREATING USER...");
-                fetch(`${API_URL}?action=addJudge&u=${form.u}&p=${form.p}&name=${form.name}&cats=${form.cats}`)
-                .then(()=>{ hideLoader(); Swal.fire('Success','เพิ่มกรรมการแล้ว','success'); });
-            }
+            const { value: form } = await Swal.fire({ title: 'เพิ่มกรรมการ', background:'#0a1423', color:'#fff', html: `<input id="j-u" class="input-cyber" placeholder="User"><input id="j-p" class="input-cyber" placeholder="Pass"><input id="j-n" class="input-cyber" placeholder="Name"><input id="j-c" class="input-cyber" value="Oral,Poster,Photo,Film">`, preConfirm: ()=>({ u:document.getElementById('j-u').value, p:document.getElementById('j-p').value, name:document.getElementById('j-n').value, cats:document.getElementById('j-c').value }) });
+            if(form && form.u) { showLoader("ADDING..."); fetch(`${API_URL}?action=addJudge&u=${form.u}&p=${form.p}&name=${form.name}&cats=${form.cats}`).then(()=>{ hideLoader(); Swal.fire('Success'); }); }
         }
 
         async function openScore(id, title) {
@@ -387,17 +398,10 @@
             let html = `<div id="sc-box">`;
             list.forEach((c,i)=> html+=`<div class="d-flex justify-content-between mb-2 align-items-center"><span class="small text-info text-start">${c.n} (${c.m})</span><input type="number" id="s${i}" class="input-cyber text-center" style="width:60px" min="0" max="${c.m}" oninput="if(value>${c.m})value=${c.m};calc()"></div>`);
             html += `</div><div class="text-end h5 text-primary mt-3">รวม: <span id="sum">0</span></div>`;
-            
-            const {isConfirmed} = await Swal.fire({
-                title: title, html: html, background:'#0a1423', color:'#fff', showCancelButton:true, confirmButtonText:'SUBMIT', confirmButtonColor:'#00f2ff',
-                didOpen: calc 
-            });
-
+            const {isConfirmed} = await Swal.fire({ title: title, html: html, background:'#0a1423', color:'#fff', showCancelButton:true, confirmButtonText:'SUBMIT', confirmButtonColor:'#00f2ff', didOpen: calc });
             if(isConfirmed) {
-                let total=0, det="";
-                list.forEach((c,i)=>{ let v=Number(document.getElementById(`s${i}`).value)||0; total+=v; det+=`[${c.n}:${v}]`; });
-                showLoader("SENDING SCORE...");
-                fetch(`${API_URL}?action=submitScore&id=${id}&judge=${currentUser.name}&score=${total}&detail=${det}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); });
+                let total=0, det=""; list.forEach((c,i)=>{ let v=Number(document.getElementById(`s${i}`).value)||0; total+=v; det+=`[${c.n}:${v}]`; });
+                showLoader("SENDING..."); fetch(`${API_URL}?action=submitScore&id=${id}&judge=${currentUser.name}&score=${total}&detail=${det}`).then(()=>{ hideLoader(); Swal.fire({icon:'success',title:'Saved',timer:1000,showConfirmButton:false,background:'#0a1423',color:'#fff'}); fetchData(true); });
             }
         }
         window.calc = function() { let s=0; document.querySelectorAll('#sc-box input').forEach(i=>s+=Number(i.value)||0); document.getElementById('sum').innerText=s; }
@@ -410,22 +414,8 @@
         }
         function toggleEditMode() { isEditMode=!isEditMode; renderList(); }
         function saveOrder() { const ids = Array.from(document.querySelectorAll('.card-player')).map(e=>e.getAttribute('data-id')); fetch(`${API_URL}?action=updateOrder&ids=${ids.join(',')}`); }
-        
         function printReport() {
-            let html = `<div style="font-family:Sarabun, sans-serif; color:black;"><h2 style="text-align:center;">สรุปผลคะแนน SADAO MED-TECH 2026</h2><p style="text-align:center;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>`;
-            Object.keys(CATS).forEach(key => {
-                let list = allData.filter(r => r[3] === key);
-                if(list.length > 0) {
-                    list.sort((a,b) => (b[6]||0) - (a[6]||0));
-                    html += `<h3 style="margin-top:20px; border-bottom:2px solid black;">${CATS[key].label}</h3><table style="width:100%; border-collapse:collapse; margin-bottom:10px;"><thead><tr style="background:#eee;"><th style="border:1px solid #ccc; padding:5px;">อันดับ</th><th style="border:1px solid #ccc; padding:5px;">ชื่อเรื่อง</th><th style="border:1px solid #ccc; padding:5px;">ผู้ประกวด</th><th style="border:1px solid #ccc; padding:5px;">สังกัด</th><th style="border:1px solid #ccc; padding:5px; text-align:right;">คะแนน</th></tr></thead><tbody>`;
-                    list.forEach((r, idx) => { html += `<tr><td style="border:1px solid #ccc; padding:5px; text-align:center;">${idx+1}</td><td style="border:1px solid #ccc; padding:5px;">${r[1]}</td><td style="border:1px solid #ccc; padding:5px;">${r[2]}</td><td style="border:1px solid #ccc; padding:5px;">${r[4]} (${LEVEL_LABELS[r[7]]||r[7]})</td><td style="border:1px solid #ccc; padding:5px; text-align:right;">${r[6]||0}</td></tr>`; });
-                    html += `</tbody></table>`;
-                }
-            });
-            html += `</div>`;
-            let printWin = window.open('', '_blank');
-            printWin.document.write(`<html><head><title>Print Report</title></head><body>${html}</body></html>`);
-            printWin.document.close(); printWin.focus(); setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+            /* Legacy Print */
         }
     </script>
 </body>

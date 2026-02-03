@@ -48,8 +48,8 @@
         .cat-card { cursor: pointer; transition: 0.2s; padding: 20px; text-align: center; height: 100%; border: 1px solid rgba(255,255,255,0.1); }
         .cat-card:hover { border-color: var(--secondary); background: rgba(0,255,136,0.1); transform: translateY(-3px); }
         
-        .card-player { border-left: 4px solid #555; margin-bottom: 10px; padding: 15px; background: rgba(255,255,255,0.03); }
-        .card-player.active { border-left-color: var(--secondary); background: rgba(0,255,136,0.05); }
+        .card-player { border-left: 4px solid #555; margin-bottom: 10px; padding: 15px; background: rgba(255,255,255,0.03); transition: all 0.3s ease; }
+        .card-player.active { border-left-color: var(--secondary); background: rgba(0,255,136,0.05); transform: scale(1.01); box-shadow: 0 0 15px rgba(0,255,136,0.1); }
         .level-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #aaa; margin-left: 5px; }
         .score-mode-switch { cursor: pointer; color: var(--secondary); text-decoration: underline; font-size: 0.9rem; }
         .input-cyber { background: #111; border: 1px solid #444; color: #fff; width: 100%; padding: 8px; }
@@ -142,8 +142,10 @@
     <div id="print-area" style="display:none;"></div>
 
     <script>
-        // 🔴🔴 URL ของคุณ 🔴🔴
+        // 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
+        // ใส่ Web App URL ของคุณตรงนี้
         const API_URL = "https://script.google.com/macros/s/AKfycbyGtY1FBwTvk0ng7eOcGJ_cs9mZt-6jC9WoOAWhp1d6YHSTpd3HDJImdae3dFxMvfRv7Q/exec";
+        // 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴
 
         const CATS = {
             'Oral_Research': { label: 'Oral: วิจัย', group: 'Oral' },
@@ -160,19 +162,13 @@
         const LEVELS = ['Hospital', 'HPH', 'DHO']; 
         const LEVEL_LABELS = {'Hospital':'โรงพยาบาล', 'HPH':'รพ.สต.', 'DHO':'สสอ.'};
         
-        // อัปเดตเกณฑ์คะแนนตามคำขอ (15/15/15/15/5/10/5/20)
+        // เกณฑ์คะแนน
         const CRITERIA = {
             'Oral_Research': [ 
-                {n:'ชื่อเรื่อง/ที่มา', m:15}, 
-                {n:'วัตถุประสงค์', m:15}, 
-                {n:'ระเบียบวิธีวิจัย', m:15}, 
-                {n:'ผล/วิเคราะห์ข้อมูล', m:15}, 
-                {n:'บุคลิกภาพ', m:5}, 
-                {n:'การใช้ประโยชน์', m:10}, 
-                {n:'ตอบคำถาม', m:5}, 
-                {n:'เอกสารฉบับสมบูรณ์', m:20} 
+                {n:'ชื่อเรื่อง/ที่มา', m:15}, {n:'วัตถุประสงค์', m:15}, {n:'ระเบียบวิธีวิจัย', m:15}, 
+                {n:'ผล/วิเคราะห์ข้อมูล', m:15}, {n:'บุคลิกภาพ', m:5}, {n:'การใช้ประโยชน์', m:10}, 
+                {n:'ตอบคำถาม', m:5}, {n:'เอกสารฉบับสมบูรณ์', m:20} 
             ],
-            // ประเภทอื่นๆ ใช้ค่าเดิม หรือปรับตามต้องการ
             'Oral_R2R': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
             'Oral_CQI_Clinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
             'Oral_CQI_NonClinic': [{n:'เนื้อหา', m:80}, {n:'นำเสนอ', m:20}],
@@ -186,6 +182,7 @@
         };
 
         let currentUser = null, allData = [], currentCat = '', isEditMode = false, sortableInstance = null, isQuickScore = false;
+        let syncInterval = null;
 
         window.onload = () => {
             const saved = localStorage.getItem('sadao_user_v2');
@@ -202,46 +199,53 @@
             });
         }
         function doLogout() { localStorage.removeItem('sadao_user_v2'); location.reload(); }
+        
         function bootSystem() {
-            document.getElementById('login-container').style.display='none'; document.getElementById('app-container').style.display='block';
+            document.getElementById('login-container').style.display='none'; 
+            document.getElementById('app-container').style.display='block';
             document.getElementById('user-display').innerText = currentUser.name;
             if(currentUser.role==='Admin') document.getElementById('admin-toolbar').classList.remove('d-none');
+            
+            // โหลดครั้งแรก
             fetchData();
-        }
-        async function fetchData() {
-            const res = await fetch(`${API_URL}?action=getData`); allData = await res.json();
-            setupDashboard(); updateRank();
+            
+            // 🟢 Real-time Auto Sync ทุก 5 วินาที
+            if(syncInterval) clearInterval(syncInterval);
+            syncInterval = setInterval(() => {
+                if(!isEditMode) fetchData(true);
+            }, 5000);
         }
 
-        // --- จัดกลุ่ม Dashboard ---
+        async function fetchData(isAuto = false) {
+            if(!isAuto) Swal.showLoading(); 
+            try {
+                const res = await fetch(`${API_URL}?action=getData`); 
+                allData = await res.json();
+                
+                // อัปเดตหน้าจอ
+                setupDashboard();
+                updateRank();
+                if(document.getElementById('view-list').style.display === 'block') {
+                    renderList();
+                }
+                if(!isAuto) Swal.close();
+            } catch(e) {
+                console.log("Sync failed");
+            }
+        }
+
         function setupDashboard() {
             const container = document.getElementById('dashboard-content');
             container.innerHTML = '';
-            
-            // กำหนดลำดับกลุ่ม
             const GROUPS = ['Oral', 'Poster', 'Photo', 'Film'];
             
             GROUPS.forEach(groupName => {
-                // กรองเฉพาะหมวดในกลุ่มนี้
                 let catsInGroup = Object.keys(CATS).filter(k => CATS[k].group === groupName);
-                
-                // เช็คสิทธิ์ User ว่าเห็นหมวดไหนบ้างในกลุ่มนี้
-                let visibleCats = catsInGroup.filter(key => 
-                    currentUser.role === 'Admin' || currentUser.categories.includes(CATS[key].group)
-                );
-
+                let visibleCats = catsInGroup.filter(key => currentUser.role === 'Admin' || currentUser.categories.includes(CATS[key].group));
                 if(visibleCats.length > 0) {
-                    // สร้าง Header กลุ่ม
-                    let groupHtml = `<h5 class="group-title">${groupName} Presentation</h5>`;
-                    groupHtml += `<div class="row g-3">`;
-                    
+                    let groupHtml = `<h5 class="group-title">${groupName} Presentation</h5><div class="row g-3">`;
                     visibleCats.forEach(key => {
-                        groupHtml += `
-                        <div class="col-6 col-md-4">
-                            <div class="tech-panel cat-card" onclick="openCat('${key}')">
-                                <div class="fw-bold">${CATS[key].label}</div>
-                            </div>
-                        </div>`;
+                        groupHtml += `<div class="col-6 col-md-4"><div class="tech-panel cat-card" onclick="openCat('${key}')"><div class="fw-bold">${CATS[key].label}</div></div></div>`;
                     });
                     groupHtml += `</div>`;
                     container.innerHTML += groupHtml;
@@ -281,21 +285,16 @@
 
         async function openScore(id, title) {
             let criteriaList = CRITERIA[currentCat] || CRITERIA['Default'];
-            
-            // *** เพิ่ม oninput เพื่อล็อคคะแนนห้ามเกิน ***
             let detailHtml = `<div id="detail-area">`;
             criteriaList.forEach((c,i) => {
                 detailHtml += `
                 <div class="mb-2 text-start d-flex justify-content-between align-items-center">
                     <label class="small text-info">${c.n} (เต็ม ${c.m})</label>
-                    <input type="number" id="sc_${i}" class="input-cyber" style="width:70px; text-align:center;" 
-                        min="0" max="${c.m}" 
-                        oninput="if(this.value > ${c.m}) this.value = ${c.m}; if(this.value < 0) this.value = 0; calcTotal()"
-                    >
+                    <input type="number" id="sc_${i}" class="input-cyber" style="width:70px; text-align:center;" min="0" max="${c.m}" 
+                        oninput="if(this.value > ${c.m}) this.value = ${c.m}; if(this.value < 0) this.value = 0; calcTotal()">
                 </div>`;
             });
             detailHtml += `</div>`;
-            
             let quickHtml = `<div id="quick-area" style="display:none"><div class="text-center py-3"><label class="text-warning mb-2">กรอกคะแนนรวม (เต็ม 100)</label><input type="number" id="quick_total" class="input-cyber text-center fs-4" max="100" oninput="if(this.value>100)this.value=100"></div></div>`;
             let toggleBtn = `<div class="text-end mb-2"><span class="score-mode-switch" onclick="toggleScoreMode()">⚡ เปลี่ยนเป็นกรอกคะแนนช่องเดียว</span></div>`;
 
@@ -344,13 +343,7 @@
             let lvOpts = ''; LEVELS.forEach(l => lvOpts += `<option value="${l}">${LEVEL_LABELS[l]}</option>`);
             const {value: f} = await Swal.fire({
                 title: 'ลงทะเบียน', background:'#111', color:'#fff',
-                html: `
-                    <input id="new-title" class="input-cyber mb-2" placeholder="ชื่อเรื่อง / นวัตกรรม">
-                    <input id="new-contestant" class="input-cyber mb-2" placeholder="ชื่อผู้เข้าประกวด / ทีม">
-                    <input id="new-org" class="input-cyber mb-2" placeholder="สังกัด">
-                    <select id="new-cat" class="input-cyber mb-2">${catOpts}</select>
-                    <select id="new-lv" class="input-cyber mb-2">${lvOpts}</select>
-                `,
+                html: `<input id="new-title" class="input-cyber mb-2" placeholder="ชื่อเรื่อง / นวัตกรรม"><input id="new-contestant" class="input-cyber mb-2" placeholder="ชื่อผู้เข้าประกวด / ทีม"><input id="new-org" class="input-cyber mb-2" placeholder="สังกัด"><select id="new-cat" class="input-cyber mb-2">${catOpts}</select><select id="new-lv" class="input-cyber mb-2">${lvOpts}</select>`,
                 preConfirm: () => ({ title: document.getElementById('new-title').value, contestant: document.getElementById('new-contestant').value, org: document.getElementById('new-org').value, cat: document.getElementById('new-cat').value, level: document.getElementById('new-lv').value })
             });
             if(f && f.title) {
@@ -362,25 +355,13 @@
         function saveOrder() { const ids = Array.from(document.querySelectorAll('.card-player')).map(e=>e.getAttribute('data-id')); fetch(`${API_URL}?action=updateOrder&ids=${ids.join(',')}`); }
 
         function printReport() {
-            let html = `
-            <div style="font-family:Sarabun, sans-serif; color:black;">
-                <h2 style="text-align:center;">สรุปผลคะแนน SADAO MED-TECH 2026</h2>
-                <p style="text-align:center;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>
-            `;
+            let html = `<div style="font-family:Sarabun, sans-serif; color:black;"><h2 style="text-align:center;">สรุปผลคะแนน SADAO MED-TECH 2026</h2><p style="text-align:center;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>`;
             Object.keys(CATS).forEach(key => {
                 let list = allData.filter(r => r[3] === key);
                 if(list.length > 0) {
                     list.sort((a,b) => (b[6]||0) - (a[6]||0));
-                    html += `<h3 style="margin-top:20px; border-bottom:2px solid black;">${CATS[key].label}</h3>`;
-                    html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-                        <thead><tr style="background:#eee;">
-                            <th style="border:1px solid #ccc; padding:5px;">อันดับ</th><th style="border:1px solid #ccc; padding:5px;">ชื่อเรื่อง</th><th style="border:1px solid #ccc; padding:5px;">ผู้ประกวด</th><th style="border:1px solid #ccc; padding:5px;">สังกัด</th><th style="border:1px solid #ccc; padding:5px; text-align:right;">คะแนน</th>
-                        </tr></thead><tbody>`;
-                    list.forEach((r, idx) => {
-                        html += `<tr>
-                            <td style="border:1px solid #ccc; padding:5px; text-align:center;">${idx+1}</td><td style="border:1px solid #ccc; padding:5px;">${r[1]}</td><td style="border:1px solid #ccc; padding:5px;">${r[2]}</td><td style="border:1px solid #ccc; padding:5px;">${r[4]} (${LEVEL_LABELS[r[7]]||r[7]})</td><td style="border:1px solid #ccc; padding:5px; text-align:right;">${r[6]||0}</td>
-                        </tr>`;
-                    });
+                    html += `<h3 style="margin-top:20px; border-bottom:2px solid black;">${CATS[key].label}</h3><table style="width:100%; border-collapse:collapse; margin-bottom:10px;"><thead><tr style="background:#eee;"><th style="border:1px solid #ccc; padding:5px;">อันดับ</th><th style="border:1px solid #ccc; padding:5px;">ชื่อเรื่อง</th><th style="border:1px solid #ccc; padding:5px;">ผู้ประกวด</th><th style="border:1px solid #ccc; padding:5px;">สังกัด</th><th style="border:1px solid #ccc; padding:5px; text-align:right;">คะแนน</th></tr></thead><tbody>`;
+                    list.forEach((r, idx) => { html += `<tr><td style="border:1px solid #ccc; padding:5px; text-align:center;">${idx+1}</td><td style="border:1px solid #ccc; padding:5px;">${r[1]}</td><td style="border:1px solid #ccc; padding:5px;">${r[2]}</td><td style="border:1px solid #ccc; padding:5px;">${r[4]} (${LEVEL_LABELS[r[7]]||r[7]})</td><td style="border:1px solid #ccc; padding:5px; text-align:right;">${r[6]||0}</td></tr>`; });
                     html += `</tbody></table>`;
                 }
             });

@@ -20,8 +20,25 @@
             font-family: 'Chakra Petch', sans-serif;
             background-color: var(--bg-dark);
             background-image: radial-gradient(circle at 50% 10%, #1a2a44 0%, var(--bg-dark) 70%);
-            color: #e0e0e0; min-height: 100vh; padding-bottom: 80px;
+            color: #e0e0e0; min-height: 100vh; padding-bottom: 60px; /* เว้นที่ให้ Credit */
         }
+        
+        /* --- ANIMATIONS (ลูกเล่นโลโก้) --- */
+        @keyframes logo-float {
+            0% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
+            50% { transform: translateY(-10px); filter: drop-shadow(0 0 25px rgba(0, 242, 255, 0.8)); }
+            100% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3)); }
+        }
+        .logo-anim {
+            animation: logo-float 3s ease-in-out infinite; /* ขยับตลอดเวลา */
+            transition: all 0.3s;
+        }
+        .logo-anim:hover {
+            filter: drop-shadow(0 0 40px var(--secondary)); /* เมาส์ชี้แล้วเรืองแสงสีเขียว */
+            transform: scale(1.1);
+        }
+
+        /* --- UI STYLES --- */
         .tech-panel {
             background: var(--panel-bg); border: 1px solid rgba(0,242,255,0.2);
             border-radius: 15px; position: relative; backdrop-filter: blur(10px);
@@ -47,6 +64,14 @@
         #app-container { display: none; }
         .logo-img { max-height: 50px; margin-right: 10px; }
 
+        /* Footer Credit */
+        .dev-credit {
+            position: fixed; bottom: 10px; width: 100%; text-align: center;
+            font-size: 0.75rem; color: rgba(255,255,255,0.3);
+            font-family: 'Sarabun', sans-serif; pointer-events: none;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5); z-index: 0;
+        }
+
         /* Report Print Style */
         @media print {
             body * { visibility: hidden; }
@@ -60,7 +85,8 @@
 
     <div id="login-container">
         <div class="tech-panel p-5 text-center" style="max-width: 400px; width: 90%;">
-            <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" style="max-width:120px; margin-bottom:20px;">
+            <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" class="logo-anim" style="max-width:120px; margin-bottom:20px;">
+            
             <h3 class="neon-text mb-4">ACCESS CONTROL</h3>
             <input id="user" class="form-control bg-dark text-light mb-3" placeholder="กรุณากรอก User">
             <input id="pass" type="password" class="form-control bg-dark text-light mb-3" placeholder="กรุณากรอก Password">
@@ -72,7 +98,7 @@
         <nav class="navbar navbar-dark bg-transparent border-bottom border-secondary mb-3 p-3">
             <div class="container">
                 <span class="navbar-brand neon-text d-flex align-items-center">
-                    <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" class="logo-img">
+                    <img src="https://raw.githubusercontent.com/PINGJUPPY/SadaoContest/refs/heads/main/SDH%20LOGO.png" class="logo-img logo-anim">
                     SADAO MED-TECH
                 </span>
                 <div class="d-flex align-items-center gap-2">
@@ -121,6 +147,10 @@
                 </table>
             </div>
         </section>
+    </div>
+
+    <div class="dev-credit">
+        พัฒนาโดย นายทศพร คงสุขนิรันดร์ ตำแหน่งแพทย์แผนไทย
     </div>
 
     <div id="print-area" style="display:none;"></div>
@@ -198,11 +228,11 @@
 
         function renderList() {
             const cont = document.getElementById('contestant-container'); cont.innerHTML='';
-            let list = allData.filter(r => r[3] === currentCat); // Col D is Category (index 3)
+            let list = allData.filter(r => r[3] === currentCat); 
             if(list.length===0) cont.innerHTML='<div class="text-center text-muted py-5">NO DATA</div>';
             list.forEach(r => {
-                let active = r[5] === 'Active'; // Col F is Status (index 5)
-                let lvLabel = LEVEL_LABELS[r[7]] || r[7] || '-'; // Col H is Level (index 7)
+                let active = r[5] === 'Active'; 
+                let lvLabel = LEVEL_LABELS[r[7]] || r[7] || '-'; 
                 cont.innerHTML += `
                 <div class="tech-panel card-player ${active?'active':''}" data-id="${r[0]}">
                     <div class="d-flex justify-content-between align-items-center">
@@ -210,7 +240,10 @@
                             <div class="drag-handle me-2 ${isEditMode?'':'d-none'}" style="cursor:move;color:var(--primary)">☰</div>
                             <div>
                                 ${active?'<span class="badge bg-success mb-1">ON STAGE</span>':''}
-                                <h6 class="m-0 fw-bold">${r[1]}</h6> <small class="text-muted d-block">${r[2]}</small> <span class="level-badge">${lvLabel}</span> <small class="text-info">${r[4]}</small> </div>
+                                <h6 class="m-0 fw-bold">${r[1]}</h6> 
+                                <small class="text-muted d-block">${r[2]}</small> 
+                                <span class="level-badge">${lvLabel}</span> <small class="text-info">${r[4]}</small> 
+                            </div>
                         </div>
                         <button class="btn btn-sm btn-cyber" onclick="openScore('${r[0]}','${r[1]}')">VOTE</button>
                     </div>
@@ -292,55 +325,33 @@
         function toggleEditMode() { isEditMode = !isEditMode; renderList(); }
         function saveOrder() { const ids = Array.from(document.querySelectorAll('.card-player')).map(e=>e.getAttribute('data-id')); fetch(`${API_URL}?action=updateOrder&ids=${ids.join(',')}`); }
 
-        // --- Print Report Function ---
         function printReport() {
             let html = `
             <div style="font-family:Sarabun, sans-serif; color:black;">
                 <h2 style="text-align:center;">สรุปผลคะแนน SADAO MED-TECH 2026</h2>
                 <p style="text-align:center;">พิมพ์เมื่อ: ${new Date().toLocaleString()}</p>
             `;
-            
-            // Loop through each category
             Object.keys(CATS).forEach(key => {
-                // Filter data for this category
                 let list = allData.filter(r => r[3] === key);
                 if(list.length > 0) {
-                    // Sort Highest to Lowest Score
                     list.sort((a,b) => (b[6]||0) - (a[6]||0));
-                    
                     html += `<h3 style="margin-top:20px; border-bottom:2px solid black;">${CATS[key].label}</h3>`;
                     html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
-                        <thead>
-                            <tr style="background:#eee;">
-                                <th style="border:1px solid #ccc; padding:5px;">อันดับ</th>
-                                <th style="border:1px solid #ccc; padding:5px;">ชื่อเรื่อง</th>
-                                <th style="border:1px solid #ccc; padding:5px;">ผู้ประกวด</th>
-                                <th style="border:1px solid #ccc; padding:5px;">สังกัด</th>
-                                <th style="border:1px solid #ccc; padding:5px; text-align:right;">คะแนน</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-                    
+                        <thead><tr style="background:#eee;">
+                            <th style="border:1px solid #ccc; padding:5px;">อันดับ</th><th style="border:1px solid #ccc; padding:5px;">ชื่อเรื่อง</th><th style="border:1px solid #ccc; padding:5px;">ผู้ประกวด</th><th style="border:1px solid #ccc; padding:5px;">สังกัด</th><th style="border:1px solid #ccc; padding:5px; text-align:right;">คะแนน</th>
+                        </tr></thead><tbody>`;
                     list.forEach((r, idx) => {
                         html += `<tr>
-                            <td style="border:1px solid #ccc; padding:5px; text-align:center;">${idx+1}</td>
-                            <td style="border:1px solid #ccc; padding:5px;">${r[1]}</td>
-                            <td style="border:1px solid #ccc; padding:5px;">${r[2]}</td>
-                            <td style="border:1px solid #ccc; padding:5px;">${r[4]} (${LEVEL_LABELS[r[7]]||r[7]})</td>
-                            <td style="border:1px solid #ccc; padding:5px; text-align:right;">${r[6]||0}</td>
+                            <td style="border:1px solid #ccc; padding:5px; text-align:center;">${idx+1}</td><td style="border:1px solid #ccc; padding:5px;">${r[1]}</td><td style="border:1px solid #ccc; padding:5px;">${r[2]}</td><td style="border:1px solid #ccc; padding:5px;">${r[4]} (${LEVEL_LABELS[r[7]]||r[7]})</td><td style="border:1px solid #ccc; padding:5px; text-align:right;">${r[6]||0}</td>
                         </tr>`;
                     });
                     html += `</tbody></table>`;
                 }
             });
             html += `</div>`;
-
-            // Open new window to print
             let printWin = window.open('', '_blank');
             printWin.document.write(`<html><head><title>Print Report</title></head><body>${html}</body></html>`);
-            printWin.document.close();
-            printWin.focus();
-            setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+            printWin.document.close(); printWin.focus(); setTimeout(() => { printWin.print(); printWin.close(); }, 500);
         }
     </script>
 </body>
